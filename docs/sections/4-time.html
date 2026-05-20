@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4. Время в моделях — когда «сколько ждать?» важнее «что дальше?»</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+    <style>
+        :root{--bg:#0f1117;--card:#1a1d2e;--border:#2a2d3e;--accent:#6c9eff;--accent2:#a78bfa;--green:#4ade80;--orange:#fb923c;--red:#f87171;--text:#e2e8f0;--text2:#94a3b8;--sidebar:#151825}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.8;display:flex;min-height:100vh}
+        .sidebar{width:260px;background:var(--sidebar);border-right:1px solid var(--border);padding:20px 0;position:fixed;height:100vh;overflow-y:auto}
+        .sidebar::-webkit-scrollbar{width:6px}
+        .sidebar::-webkit-scrollbar-track{background:var(--sidebar)}
+        .sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        .sidebar{scrollbar-width:thin;scrollbar-color:var(--border) var(--sidebar)}
+        .sidebar h3{color:var(--accent);padding:0 20px;margin-bottom:16px;font-size:1em}
+        .sidebar a{display:block;padding:8px 20px;color:var(--text2);text-decoration:none;font-size:.9em;border-left:3px solid transparent;transition:all .2s}
+        .sidebar a:hover{background:rgba(108,158,255,.08);color:var(--text)}
+        .sidebar a.active{border-left-color:var(--accent);color:var(--accent);background:rgba(108,158,255,.1)}
+        .sidebar .sep{height:1px;background:var(--border);margin:12px 20px}
+        .sidebar .section-title{color:var(--text2);font-size:.75em;text-transform:uppercase;letter-spacing:1px;padding:12px 20px 4px;font-weight:600}
+        .main{margin-left:260px;padding:48px 40px;max-width:920px;width:100%}
+        h1{font-size:2.1em;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+        .subtitle{color:var(--text2);margin-bottom:36px;font-size:1.05em}
+        h2{font-size:1.4em;color:var(--accent);margin:44px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        h3{font-size:1.1em;color:var(--accent2);margin:28px 0 12px}
+        p{margin:10px 0}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin:16px 0}
+        .card.highlight{border-left:4px solid var(--accent)}
+        .card.warn{border-left:4px solid var(--orange)}
+        .card.success{border-left:4px solid var(--green)}
+        .card.danger{border-left:4px solid var(--red)}
+        ul,ol{padding-left:24px;margin:10px 0}li{margin:8px 0}
+        code{background:rgba(108,158,255,.1);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:.9em}
+        pre{background:#141620;border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:.85em;margin:14px 0;line-height:1.6}
+        table{width:100%;border-collapse:collapse;margin:12px 0}
+        th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+        th{color:var(--accent);font-weight:600}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .schema{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:32px 24px;margin:20px 0;text-align:center}
+        .timeline{display:flex;align-items:center;gap:0;margin:16px 0;flex-wrap:wrap}
+        .timeline .step{background:var(--card);border:2px solid var(--accent2);border-radius:10px;padding:10px 14px;text-align:center;font-size:.85em;min-width:90px}
+        .timeline .arrow{color:var(--text2);font-size:1.2em;padding:0 6px}
+        .timeline .delay{background:rgba(251,146,60,.15);border:2px dashed var(--orange);border-radius:10px;padding:10px 14px;text-align:center;font-size:.85em;color:var(--orange);min-width:80px}
+        @media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:24px 16px}}
+        @media(max-width:700px){.grid{grid-template-columns:1fr}.timeline{flex-direction:column}.timeline .arrow{transform:rotate(90deg)}}
+        @media print{body{display:block}.sidebar{display:none}.main{margin-left:0}body{background:#fff;color:#1a1a1a}.card{background:#f9f9f9;border-color:#ddd}h1{-webkit-text-fill-color:#2563eb}h2{color:#2563eb}h3{color:#7c3aed}code{background:#f0f0f0;color:#2563eb}pre{background:#f5f5f5;border-color:#ddd}}
+    </style>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar"></nav>
+    <script src="../nav.js"></script>
+
+    <div class="main">
+        <h1>Время в моделях — когда «сколько ждать?» важнее «что дальше?»</h1>
+        <p class="subtitle">Темпоральные сети Петри, задержки, производительность и узкие места</p>
+
+        <!-- ============ ПРОБЛЕМА ============ -->
+        <h2>Зачем нам время</h2>
+
+        <p>До сих пор все наши модели были <strong>логическими</strong>. Они отвечали на вопрос «что произойдёт после чего?», но молчали о том, <strong>сколько времени</strong> это займёт.</p>
+
+        <p>Вот конкретная ситуация. У тебя конвейер на заводе:</p>
+
+        <div class="timeline">
+            <div class="step">Заготовка</div>
+            <div class="arrow">&rarr;</div>
+            <div class="step">Фрезеровка</div>
+            <div class="arrow">&rarr;</div>
+            <div class="step">Сварка</div>
+            <div class="arrow">&rarr;</div>
+            <div class="step">Покраска</div>
+            <div class="arrow">&rarr;</div>
+            <div class="step">Готово</div>
+        </div>
+
+        <p>Обычная сеть Петри скажет: «после фрезеровки — сварка, после сварки — покраска». И всё. Но тебе-то нужно знать:</p>
+
+        <div class="card warn">
+            <ul>
+                <li>Фрезеровка занимает <strong>12 минут</strong>, сварка — <strong>8 минут</strong>, покраска — <strong>20 минут</strong>. Где узкое место?</li>
+                <li>Если добавить вторую покрасочную камеру — увеличится ли пропускная способность?</li>
+                <li>Сколько деталей за смену (8 часов) пройдёт через конвейер?</li>
+                <li>Если поставщик задерживает заготовки на 5 минут — как это скажется на выходе?</li>
+            </ul>
+            <p style="margin-top:10px">Ни FSM, ни обычные сети Петри, ни Statecharts на эти вопросы не ответят. Им нужно <strong>время</strong>.</p>
+        </div>
+
+        <!-- ============ ИДЕЯ ============ -->
+        <h2>Главная идея: задержка на переходе</h2>
+
+        <p>Решение элегантное: берём обычную сеть Петри и приписываем к каждому переходу число — <strong>время срабатывания</strong>.</p>
+
+        <div class="card highlight">
+            <p><strong>Аналогия.</strong> Обычная сеть Петри — это схема метро без расписания. Ты знаешь, что после станции A будет B, но не знаешь, ехать 2 минуты или 20. Темпоральная сеть — это схема метро <strong>с временем в пути</strong> между станциями.</p>
+        </div>
+
+        <p>Как это работает механически:</p>
+
+        <div class="card">
+            <ol>
+                <li>Переход становится <strong>разрешён</strong> (все входные позиции содержат нужные токены) — как обычно</li>
+                <li>Токены <strong>резервируются</strong> — они «заняты» этим переходом и не могут быть использованы другими</li>
+                <li>Начинается <strong>отсчёт задержки</strong> $d$ (время обработки)</li>
+                <li>Когда задержка истекла — переход <strong>срабатывает</strong>: зарезервированные токены исчезают, появляются выходные токены</li>
+            </ol>
+        </div>
+
+        <p>То есть единственное отличие от обычной сети Петри — между моментами «переход разрешён» и «переход сработал» есть пауза. Внутри этой паузы токены заблокированы — они «в обработке».</p>
+
+        <!-- ============ ВИДЫ ЗАДЕРЖЕК ============ -->
+        <h2>Три вида задержек</h2>
+
+        <p>Не всегда время обработки — это точное число. Иногда оно колеблется, иногда вообще случайное. Поэтому существуют три подхода:</p>
+
+        <h3>1. Детерминированная задержка</h3>
+
+        <p>Каждому переходу приписано <strong>точное число</strong>: $d(t_i) = \text{const}$.</p>
+
+        <div class="card">
+            <p>Пример: фрезерный станок с ЧПУ. Программа одна и та же, заготовка одна и та же — фрезеровка <strong>всегда</strong> занимает 12 минут (±секунды, которыми можно пренебречь).</p>
+            <p style="margin-top:8px">Формально: $d(t_{\text{фрезеровка}}) = 12$ мин.</p>
+        </div>
+
+        <p>Это самый простой случай. Подходит для конвейеров, роботизированных ячеек, цифровых протоколов — везде, где время операции предсказуемо.</p>
+
+        <h3>2. Интервальная задержка</h3>
+
+        <p>Время лежит в <strong>диапазоне</strong>: $d(t_i) \in [a, b]$.</p>
+
+        <div class="card">
+            <p>Пример: ручная сварка. Опытный сварщик делает шов за 6-8 минут, но бывает и 10, если шов сложный. Мы не знаем точно, но знаем границы.</p>
+            <p style="margin-top:8px">Формально: $d(t_{\text{сварка}}) \in [6, 10]$ мин.</p>
+            <p style="margin-top:8px;font-size:.9em;color:var(--text2)">Переход <strong>может</strong> сработать в любой момент внутри интервала, но <strong>обязан</strong> сработать не позже $b$. Если к моменту $b$ не сработал — он срабатывает принудительно.</p>
+        </div>
+
+        <p>Этот подход используется для анализа <strong>наилучшего и наихудшего случая</strong> (best-case / worst-case). Не нужно знать распределение — достаточно границ.</p>
+
+        <h3>3. Стохастическая задержка</h3>
+
+        <p>Время — <strong>случайная величина</strong> с заданным распределением: $d(t_i) \sim F(\lambda)$.</p>
+
+        <div class="card">
+            <p>Пример: поступление заказов в интернет-магазин. Заказы приходят случайно, но в среднем — 3 в минуту. Время между заказами подчиняется экспоненциальному распределению: $d \sim \text{Exp}(\lambda = 3)$.</p>
+            <p style="margin-top:8px">Другой пример: отказ оборудования. Станок ломается случайно, среднее время наработки на отказ — 500 часов. $d_{\text{отказ}} \sim \text{Exp}(\lambda = 1/500)$.</p>
+        </div>
+
+        <div class="card highlight">
+            <p><strong>Почему экспоненциальное?</strong> Оно обладает свойством «без памяти»: вероятность отказа в следующую минуту не зависит от того, сколько станок уже проработал. Это упрощает математику и часто достаточно точно описывает реальность. Сети Петри с экспоненциальными задержками называют <strong>стохастическими сетями Петри</strong> (SPN — Stochastic Petri Net).</p>
+        </div>
+
+        <div class="card">
+            <table>
+                <tr><th>Тип задержки</th><th>Запись</th><th>Когда использовать</th></tr>
+                <tr>
+                    <td>Детерминированная</td>
+                    <td>$d(t) = c$</td>
+                    <td>Роботы, ЧПУ, цифровые протоколы</td>
+                </tr>
+                <tr>
+                    <td>Интервальная</td>
+                    <td>$d(t) \in [a, b]$</td>
+                    <td>Ручные операции, best/worst-case анализ</td>
+                </tr>
+                <tr>
+                    <td>Стохастическая</td>
+                    <td>$d(t) \sim F(\lambda)$</td>
+                    <td>Очереди, отказы, случайные события</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- ============ ЖИВОЙ ПРИМЕР ============ -->
+        <h2>Живой пример: конвейер с узким местом</h2>
+
+        <p>Вернёмся к нашему заводскому конвейеру. Теперь с числами.</p>
+
+        <div class="schema">
+            <div style="display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap">
+                <div style="width:50px;height:50px;border-radius:50%;border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:.75em;color:var(--green)">p₁<br><span style="font-size:1.3em">&bull;</span></div>
+                <div style="padding:0 4px;color:var(--text2)">&rarr;</div>
+                <div style="background:var(--card);border:2px solid var(--accent);padding:6px 10px;font-size:.75em;text-align:center;min-width:70px">t₁<br><span style="color:var(--orange);font-weight:bold">12 мин</span><br><span style="color:var(--text2)">фрезер</span></div>
+                <div style="padding:0 4px;color:var(--text2)">&rarr;</div>
+                <div style="width:50px;height:50px;border-radius:50%;border:2px solid var(--accent2);display:flex;align-items:center;justify-content:center;font-size:.75em;color:var(--accent2)">p₂</div>
+                <div style="padding:0 4px;color:var(--text2)">&rarr;</div>
+                <div style="background:var(--card);border:2px solid var(--accent);padding:6px 10px;font-size:.75em;text-align:center;min-width:70px">t₂<br><span style="color:var(--orange);font-weight:bold">8 мин</span><br><span style="color:var(--text2)">сварка</span></div>
+                <div style="padding:0 4px;color:var(--text2)">&rarr;</div>
+                <div style="width:50px;height:50px;border-radius:50%;border:2px solid var(--accent2);display:flex;align-items:center;justify-content:center;font-size:.75em;color:var(--accent2)">p₃</div>
+                <div style="padding:0 4px;color:var(--text2)">&rarr;</div>
+                <div style="background:var(--card);border:2px solid var(--red);padding:6px 10px;font-size:.75em;text-align:center;min-width:70px">t₃<br><span style="color:var(--red);font-weight:bold">20 мин</span><br><span style="color:var(--text2)">покраска</span></div>
+                <div style="padding:0 4px;color:var(--text2)">&rarr;</div>
+                <div style="width:50px;height:50px;border-radius:50%;border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:.75em;color:var(--green)">p₄</div>
+            </div>
+        </div>
+
+        <p>Позиции: $p_1$ — заготовка ждёт фрезеровки, $p_2$ — ждёт сварки, $p_3$ — ждёт покраски, $p_4$ — готовая деталь. Начальная маркировка: один токен в $p_1$.</p>
+
+        <h3>Прогоняем по шагам</h3>
+
+        <div class="card">
+            <table>
+                <tr><th>Время</th><th>Событие</th><th>Маркировка ($p_1, p_2, p_3, p_4$)</th></tr>
+                <tr><td>0 мин</td><td>Заготовка поступила. $t_1$ начинает работу</td><td style="font-family:monospace">(1→0, 0, 0, 0) — токен зарезервирован</td></tr>
+                <tr><td>12 мин</td><td>Фрезеровка готова. Токен в $p_2$. $t_2$ стартует</td><td style="font-family:monospace">(0, 1→0, 0, 0)</td></tr>
+                <tr><td>20 мин</td><td>Сварка готова. Токен в $p_3$. $t_3$ стартует</td><td style="font-family:monospace">(0, 0, 1→0, 0)</td></tr>
+                <tr><td>40 мин</td><td>Покраска готова. Токен в $p_4$</td><td style="font-family:monospace">(0, 0, 0, 1)</td></tr>
+            </table>
+            <p style="margin-top:10px">Итого: одна деталь проходит конвейер за <strong>12 + 8 + 20 = 40 минут</strong>.</p>
+        </div>
+
+        <h3>А если деталей много?</h3>
+
+        <p>Представь, что заготовки поступают непрерывно. Как только фрезер закончил одну деталь, он берёт следующую. Вопрос: с какой скоростью конвейер выдаёт готовые детали?</p>
+
+        <div class="card highlight">
+            <p><strong>Узкое место (bottleneck)</strong> — это самый медленный этап. У нас это покраска: 20 минут. Пока краска сохнет, фрезер и сварка давно закончили и ждут.</p>
+            <p style="margin-top:10px"><strong>Пропускная способность</strong> (throughput) определяется узким местом:</p>
+            <p style="text-align:center;font-size:1.1em;margin:12px 0">$$\text{Throughput} = \frac{1}{\max(d_i)} = \frac{1}{20} = 0{,}05 \text{ дет./мин} = 3 \text{ дет./час}$$</p>
+            <p>За 8-часовую смену: <strong>24 детали</strong>.</p>
+        </div>
+
+        <h3>Добавляем вторую покрасочную камеру</h3>
+
+        <p>Это классический ход — ускорить узкое место. В темпоральной сети Петри это моделируется добавлением <strong>параллельного перехода</strong>:</p>
+
+        <div class="schema">
+            <div style="max-width:600px;margin:0 auto;text-align:left">
+                <p style="text-align:center;color:var(--text2);font-size:.85em;margin-bottom:12px">Позиция $p_3$ теперь имеет два выходных перехода: $t_3$ и $t_3'$ (обе камеры по 20 мин)</p>
+                <div style="display:flex;align-items:center;justify-content:center;gap:8px">
+                    <div style="width:50px;height:50px;border-radius:50%;border:2px solid var(--accent2);display:flex;align-items:center;justify-content:center;font-size:.75em;color:var(--accent2)">p₃</div>
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                        <div style="display:flex;align-items:center;gap:6px">
+                            <span style="color:var(--text2)">&rarr;</span>
+                            <div style="background:var(--card);border:2px solid var(--orange);padding:4px 10px;font-size:.75em;text-align:center">t₃ <span style="color:var(--orange)">20 мин</span></div>
+                            <span style="color:var(--text2)">&rarr;</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px">
+                            <span style="color:var(--text2)">&rarr;</span>
+                            <div style="background:var(--card);border:2px solid var(--orange);padding:4px 10px;font-size:.75em;text-align:center">t₃' <span style="color:var(--orange)">20 мин</span></div>
+                            <span style="color:var(--text2)">&rarr;</span>
+                        </div>
+                    </div>
+                    <div style="width:50px;height:50px;border-radius:50%;border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:.75em;color:var(--green)">p₄</div>
+                </div>
+            </div>
+        </div>
+
+        <p>Теперь две детали могут краситься одновременно. Эффективное время покраски на одну деталь:</p>
+
+        <p style="text-align:center;font-size:1.05em">$$d_{\text{покраска,эфф}} = \frac{20}{2} = 10 \text{ мин}$$</p>
+
+        <p>Новое узкое место — <strong>фрезеровка</strong> (12 мин). Новая пропускная способность:</p>
+
+        <div class="card success">
+            <p style="text-align:center;font-size:1.05em">$$\text{Throughput} = \frac{1}{12} \approx 0{,}083 \text{ дет./мин} = 5 \text{ дет./час}$$</p>
+            <p>За смену: <strong>40 деталей</strong> вместо 24. Прирост +67% от одной дополнительной камеры.</p>
+        </div>
+
+        <p>Вот это и есть сила темпоральных моделей: ты можешь <strong>количественно</strong> оценить эффект изменений ещё до того, как купил оборудование.</p>
+
+        <!-- ============ ФОРМАЛЬНО ============ -->
+        <h2>Формальное определение</h2>
+
+        <p>Темпоральная сеть Петри — это обычная сеть Петри плюс функция задержки:</p>
+
+        <div class="card">
+            <p style="text-align:center;font-size:1.05em;margin:12px 0">$$TPN = (P, T, F, W, M_0, D)$$</p>
+            <ul>
+                <li>$(P, T, F, W, M_0)$ — стандартная сеть Петри (позиции, переходы, дуги, веса, начальная маркировка)</li>
+                <li>$D: T \rightarrow \mathbb{R}^+$ — функция <strong>задержки</strong>: каждому переходу сопоставлено неотрицательное число (или интервал, или распределение)</li>
+            </ul>
+        </div>
+
+        <p>Для интервальных задержек запись чуть другая:</p>
+
+        <div class="card">
+            <p style="text-align:center;font-size:1.05em;margin:12px 0">$$D: T \rightarrow \mathbb{R}^+ \times (\mathbb{R}^+ \cup \{\infty\})$$</p>
+            <p>Каждому переходу — пара $[a_i, b_i]$: нижняя и верхняя граница задержки. Если $a = b$ — детерминированная. Если $b = \infty$ — переход может ждать сколько угодно (но не обязан).</p>
+        </div>
+
+        <!-- ============ АНАЛИЗ ============ -->
+        <h2>Что можно анализировать</h2>
+
+        <p>Добавление времени открывает целый класс вопросов, недоступных обычным сетям Петри:</p>
+
+        <h3>1. Пропускная способность (throughput)</h3>
+
+        <div class="card">
+            <p>Сколько токенов проходит через систему за единицу времени. Мы уже посчитали: $1/\max(d_i)$ для последовательной цепочки. Для сложных сетей считается симуляцией или аналитически через <strong>инварианты</strong> и <strong>теорию очередей</strong>.</p>
+        </div>
+
+        <h3>2. Время цикла (cycle time)</h3>
+
+        <div class="card">
+            <p>Сколько времени токен проводит в системе от входа до выхода. В нашем конвейере — 40 минут. Но если добавить очереди (детали ждут свободного станка), время цикла вырастет:</p>
+            <p style="text-align:center;margin:8px 0">$$\text{Cycle time} = \text{Время обработки} + \text{Время ожидания}$$</p>
+            <p>Закон Литтла связывает всё вместе:</p>
+            <p style="text-align:center;margin:8px 0;font-size:1.05em">$$L = \lambda \cdot W$$</p>
+            <p>$L$ — среднее число заявок в системе, $\lambda$ — интенсивность входного потока, $W$ — среднее время пребывания. Если знаешь два — найдёшь третье.</p>
+        </div>
+
+        <h3>3. Загрузка ресурсов (utilization)</h3>
+
+        <div class="card">
+            <p>Какую долю времени каждый станок занят. В нашем примере до оптимизации:</p>
+            <table>
+                <tr><th>Станок</th><th>Время работы</th><th>Период цикла</th><th>Загрузка</th></tr>
+                <tr><td>Фрезер</td><td>12 мин</td><td>20 мин</td><td>$12/20 = 60\%$</td></tr>
+                <tr><td>Сварка</td><td>8 мин</td><td>20 мин</td><td>$8/20 = 40\%$</td></tr>
+                <tr><td>Покраска</td><td>20 мин</td><td>20 мин</td><td>$20/20 = 100\%$</td></tr>
+            </table>
+            <p style="margin-top:8px">Покраска загружена на 100% — это и есть узкое место. Фрезер простаивает 40% времени.</p>
+        </div>
+
+        <h3>4. Временная достижимость</h3>
+
+        <div class="card">
+            <p>Может ли система достичь определённого состояния <strong>за заданное время</strong>? Например: «успеет ли робот доехать до зарядки до того, как батарея сядет?» Обычная сеть Петри скажет «да, путь существует», темпоральная скажет «да, за 47 секунд — при запасе батареи на 50 секунд».</p>
+        </div>
+
+        <!-- ============ СЕМАНТИКИ ============ -->
+        <h2>Где живёт задержка: на переходе или в позиции?</h2>
+
+        <p>До сих пор мы привязывали время к <strong>переходам</strong> (время обработки). Но есть альтернатива — привязать время к <strong>позициям</strong> (время ожидания, время хранения).</p>
+
+        <div class="grid">
+            <div class="card">
+                <h3 style="margin-top:0">Задержка на переходе</h3>
+                <p>Переход «работает» $d$ единиц времени. Токены заблокированы на входе.</p>
+                <p style="font-size:.9em;color:var(--text2)">Моделирует: обработка на станке, выполнение операции, передача данных.</p>
+            </div>
+            <div class="card">
+                <h3 style="margin-top:0">Задержка в позиции</h3>
+                <p>Токен должен «пролежать» в позиции $d$ единиц, прежде чем станет доступен.</p>
+                <p style="font-size:.9em;color:var(--text2)">Моделирует: время остывания, сушки, минимальный интервал между событиями.</p>
+            </div>
+        </div>
+
+        <p>Математически они эквивалентны — одну можно преобразовать в другую, добавив вспомогательные позиции/переходы. Но для конкретной задачи одна из них будет естественнее. На практике чаще используют задержки на переходах.</p>
+
+        <!-- ============ СТОХАСТИЧЕСКИЕ СЕТИ ============ -->
+        <h2>Стохастические сети Петри: когда всё случайно</h2>
+
+        <p>Отдельная большая тема — сети, где задержки случайные. Три важных подвида:</p>
+
+        <div class="card">
+            <table>
+                <tr><th>Название</th><th>Задержки</th><th>Для чего</th></tr>
+                <tr>
+                    <td><strong>SPN</strong> (Stochastic Petri Net)</td>
+                    <td>Все $\sim \text{Exp}(\lambda)$</td>
+                    <td>Классика. Эквивалентна марковской цепи — можно считать аналитически</td>
+                </tr>
+                <tr>
+                    <td><strong>GSPN</strong> (Generalized SPN)</td>
+                    <td>Часть — $\text{Exp}(\lambda)$, часть — мгновенные ($d=0$)</td>
+                    <td>Мгновенные переходы для логики (выбор, разветвление), тimed — для обработки</td>
+                </tr>
+                <tr>
+                    <td><strong>DSPN</strong> (Deterministic & SPN)</td>
+                    <td>Часть — $\text{Exp}(\lambda)$, часть — детерминированные</td>
+                    <td>Таймауты, фиксированные периоды среди случайных событий</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="card highlight">
+            <p><strong>Почему SPN так важна?</strong> Потому что сеть Петри, где все задержки экспоненциальные, изоморфна <strong>непрерывной марковской цепи</strong> (CTMC). А для CTMC есть хорошо развитый математический аппарат: стационарное распределение, среднее время до поглощения, вероятности состояний. То есть SPN — это мост между сетями Петри и теорией вероятностей.</p>
+        </div>
+
+        <p>GSPN — самый практичный вариант. Мгновенные переходы обрабатывают логику (если деталь бракованная — на переделку, если нет — дальше), а тimed-переходы — реальную работу. Это позволяет разделить <strong>управление</strong> и <strong>обработку</strong> в одной модели.</p>
+
+        <!-- ============ ПРИМЕР: СЕРВЕР ============ -->
+        <h2>Ещё один пример: веб-сервер с очередью</h2>
+
+        <p>Не только заводы. Вот модель веб-сервера:</p>
+
+        <div class="card">
+            <ul>
+                <li>Позиция <strong>«Очередь»</strong> — входящие запросы. Токены появляются с экспоненциальной интенсивностью $\lambda = 100$ запросов/сек</li>
+                <li>Переход <strong>«Обработка»</strong> — сервер обрабатывает запрос. Время $\sim \text{Exp}(\mu = 120)$ запросов/сек</li>
+                <li>Позиция <strong>«Сервер свободен»</strong> — содержит 1 токен, если сервер не занят (это мьютекс из главы 2!)</li>
+                <li>Позиция <strong>«Ответ»</strong> — обработанные запросы</li>
+            </ul>
+        </div>
+
+        <p>Переход «Обработка» требует токен из «Очереди» <strong>и</strong> токен из «Сервер свободен». Если сервер занят — запросы копятся в очереди.</p>
+
+        <p>Что можно посчитать:</p>
+        <div class="card success">
+            <ul>
+                <li><strong>Загрузка сервера:</strong> $\rho = \lambda / \mu = 100/120 \approx 0{,}83 = 83\%$</li>
+                <li><strong>Средняя длина очереди:</strong> $L_q = \rho^2 / (1 - \rho) = 0{,}83^2 / 0{,}17 \approx 4{,}1$ запроса</li>
+                <li><strong>Среднее время ответа:</strong> $W = 1 / (\mu - \lambda) = 1 / 20 = 50$ мс</li>
+            </ul>
+            <p style="margin-top:10px">Если нагрузка вырастет до $\lambda = 119$: загрузка 99%, очередь ~118 запросов, время ответа 1 секунда. А при $\lambda \geq 120$ — очередь растёт бесконечно, сервер «лёг».</p>
+        </div>
+
+        <p>Одна темпоральная сеть Петри — и ты видишь точку, в которой сервер перестанет справляться. Без модели — ждёшь, пока упадёт в продакшене.</p>
+
+        <!-- ============ ИНСТРУМЕНТЫ ============ -->
+        <h2>Инструменты</h2>
+
+        <div class="card">
+            <ul>
+                <li><strong>GreatSPN</strong> — бесплатный, специализирован на GSPN. Графический редактор + аналитический решатель + симулятор. Разработан в Университете Турина</li>
+                <li><strong>TimeNET</strong> — поддерживает SPN, GSPN, DSPN и не-марковские сети. Немецкая разработка (TU Berlin)</li>
+                <li><strong>CPN Tools</strong> — раскрашенные сети Петри с временем. Мощный симулятор, хорош для протоколов и распределённых систем</li>
+                <li><strong>PIPE2</strong> — Java-редактор сетей Петри с модулями анализа. Простой, подходит для учёбы</li>
+                <li><strong>SimPy</strong> (Python) — не сеть Петри напрямую, но позволяет симулировать те же процессы. Часто удобнее, если уже пишешь на Python</li>
+            </ul>
+        </div>
+
+        <!-- ============ ИТОГО ============ -->
+        <h2>Что запомнить</h2>
+
+        <div class="card success">
+            <ul>
+                <li>Темпоральная сеть Петри = обычная сеть + функция задержки $D$ на переходах</li>
+                <li>Три типа задержек: детерминированная, интервальная, стохастическая</li>
+                <li>Узкое место = самый медленный этап. Пропускная способность = $1 / \max(d_i)$</li>
+                <li>Закон Литтла: $L = \lambda \cdot W$ — связывает очередь, поток и время</li>
+                <li>SPN (экспоненциальные задержки) эквивалентна марковской цепи — можно считать аналитически</li>
+                <li>GSPN = мгновенные переходы (логика) + timed-переходы (обработка) — самый практичный вариант</li>
+                <li>Позволяет отвечать на вопросы «сколько?», «как быстро?», «где узкое место?»</li>
+            </ul>
+        </div>
+
+        <h2>Дальше</h2>
+
+        <div class="card success">
+            <p>Мы добавили часы к нашим моделям и научились считать производительность. Но все инструменты, которые мы изучили, работают <strong>реактивно</strong>: «если событие — сделай переход». А что если нужна <strong>проактивная</strong> логика: «попробуй это, если не получилось — попробуй то»? В <a href="5-behaviour-trees.html" style="color:var(--green);font-weight:600">главе 5: Деревья поведения</a> познакомимся с BT — инструментом, который покорил игровую индустрию и робототехнику.</p>
+        </div>
+    </div>
+</body>
+</html>
