@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2. Сети Петри — когда процессов больше одного</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+    <style>
+        :root{--bg:#0f1117;--card:#1a1d2e;--border:#2a2d3e;--accent:#6c9eff;--accent2:#a78bfa;--green:#4ade80;--orange:#fb923c;--red:#f87171;--text:#e2e8f0;--text2:#94a3b8;--sidebar:#151825}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.8;display:flex;min-height:100vh}
+        .sidebar{width:260px;background:var(--sidebar);border-right:1px solid var(--border);padding:20px 0;position:fixed;height:100vh;overflow-y:auto}
+        .sidebar::-webkit-scrollbar{width:6px}
+        .sidebar::-webkit-scrollbar-track{background:var(--sidebar)}
+        .sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        .sidebar{scrollbar-width:thin;scrollbar-color:var(--border) var(--sidebar)}
+        .sidebar h3{color:var(--accent);padding:0 20px;margin-bottom:16px;font-size:1em}
+        .sidebar a{display:block;padding:8px 20px;color:var(--text2);text-decoration:none;font-size:.9em;border-left:3px solid transparent;transition:all .2s}
+        .sidebar a:hover{background:rgba(108,158,255,.08);color:var(--text)}
+        .sidebar a.active{border-left-color:var(--accent);color:var(--accent);background:rgba(108,158,255,.1)}
+        .sidebar .sep{height:1px;background:var(--border);margin:12px 20px}
+        .sidebar .section-title{color:var(--text2);font-size:.75em;text-transform:uppercase;letter-spacing:1px;padding:12px 20px 4px;font-weight:600}
+        .main{margin-left:260px;padding:48px 40px;max-width:920px;width:100%}
+        h1{font-size:2.1em;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+        .subtitle{color:var(--text2);margin-bottom:36px;font-size:1.05em}
+        h2{font-size:1.4em;color:var(--accent);margin:44px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        h3{font-size:1.1em;color:var(--accent2);margin:28px 0 12px}
+        p{margin:10px 0}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin:16px 0}
+        .card.highlight{border-left:4px solid var(--accent)}
+        .card.warn{border-left:4px solid var(--orange)}
+        .card.success{border-left:4px solid var(--green)}
+        .card.danger{border-left:4px solid var(--red)}
+        ul,ol{padding-left:24px;margin:10px 0}li{margin:8px 0}
+        code{background:rgba(108,158,255,.1);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:.9em}
+        pre{background:#141620;border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:.85em;margin:14px 0;line-height:1.6}
+        table{width:100%;border-collapse:collapse;margin:12px 0}
+        th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+        th{color:var(--accent);font-weight:600}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .schema{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:32px 24px;margin:20px 0;text-align:center}
+        .num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:rgba(108,158,255,.15);color:var(--accent);font-weight:700;font-size:.85em;margin-right:8px}
+        .pn-place{display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--accent);border-radius:50%;width:56px;height:56px;font-size:.75em;font-weight:600;position:relative;background:var(--card)}
+        .pn-trans{display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--orange);background:rgba(251,146,60,.15);width:44px;height:20px;font-size:.65em;font-weight:600;color:var(--orange)}
+        .pn-token{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--green);margin:1px}
+        @media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:24px 16px}}
+        @media(max-width:700px){.grid{grid-template-columns:1fr}}
+        @media print{body{display:block}.sidebar{display:none}.main{margin-left:0}body{background:#fff;color:#1a1a1a}.card{background:#f9f9f9;border-color:#ddd}h1{-webkit-text-fill-color:#2563eb}h2{color:#2563eb}h3{color:#7c3aed}code{background:#f0f0f0;color:#2563eb}pre{background:#f5f5f5;border-color:#ddd}}
+    </style>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar"></nav>
+    <script src="../nav.js"></script>
+
+    <div class="main">
+        <h1>Сети Петри — когда процессов больше одного</h1>
+        <p class="subtitle">Параллелизм, ресурсы, синхронизация — всё то, что FSM не может</p>
+
+        <!-- ============ ПРОБЛЕМА ============ -->
+        <h2>В чём проблема</h2>
+
+        <p>В прошлой главе мы видели: FSM ломается, когда в системе несколько процессов работают одновременно. Количество состояний растёт как произведение, и при 10 компонентах мы уже имеем миллион состояний.</p>
+
+        <p>Но в реальности параллелизм — это норма, а не исключение. Два робота на конвейере. Три потока в программе. Десять станков на заводе. Нам нужен инструмент, который умеет описывать параллельные процессы <strong>естественно</strong>, без перечисления всех комбинаций.</p>
+
+        <p>Этот инструмент придумал немецкий математик Карл Адам Петри в 1962 году, в своей докторской диссертации. Ему было 23 года.</p>
+
+        <!-- ============ АНАЛОГИЯ ============ -->
+        <h2>Аналогия: водопроводная сеть</h2>
+
+        <p>Прежде чем лезть в формальности, представь водопроводную систему:</p>
+
+        <div class="card highlight">
+            <ul>
+                <li>Есть <strong>резервуары</strong> — баки с водой. В каждом баке может быть 0, 1, 2... литров воды.</li>
+                <li>Есть <strong>клапаны</strong> — они соединяют резервуары.</li>
+                <li>Клапан открывается (срабатывает) только тогда, когда во <strong>всех</strong> подводящих резервуарах достаточно воды.</li>
+                <li>Когда клапан открывается, он забирает воду из подводящих резервуаров и наливает в отводящие.</li>
+            </ul>
+        </div>
+
+        <p>Вот и всё. Сеть Петри — это именно это, только вместо «резервуаров» говорят <strong>места</strong>, вместо «клапанов» — <strong>переходы</strong>, а вместо «литров воды» — <strong>токены</strong> (фишки).</p>
+
+        <p>Токены — это ключевая штука. В FSM у тебя одна «фишка» — текущее состояние. В сети Петри фишек может быть <strong>много</strong>, и они разложены по разным местам. Каждая фишка — это свой процесс, свой ресурс, своя задача в очереди.</p>
+
+        <!-- ============ ТРИ ЭЛЕМЕНТА ============ -->
+        <h2>Три элемента сети Петри</h2>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Места (кружки)</h3>
+                <p>Место — это «контейнер» для токенов. Оно описывает условие, состояние ресурса или этап процесса.</p>
+                <p style="margin-top:8px;font-size:.9em;color:var(--text2)">Примеры: «робот свободен», «деталь в буфере», «станок работает», «3 задачи в очереди».</p>
+                <div style="text-align:center;margin-top:12px">
+                    <div class="pn-place" style="border-color:var(--green)">
+                        <span class="pn-token"></span><span class="pn-token"></span>
+                    </div>
+                    <div style="font-size:.8em;color:var(--text2);margin-top:4px">Место с 2 токенами</div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Переходы (прямоугольники)</h3>
+                <p>Переход — это «событие» или «действие». Он забирает токены из входных мест и кладёт в выходные.</p>
+                <p style="margin-top:8px;font-size:.9em;color:var(--text2)">Примеры: «взять деталь», «начать обработку», «отправить сообщение».</p>
+                <div style="text-align:center;margin-top:12px">
+                    <div class="pn-trans">t₁</div>
+                    <div style="font-size:.8em;color:var(--text2);margin-top:4px">Переход</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Дуги (стрелки)</h3>
+            <p>Стрелки соединяют места с переходами и переходы с местами. Важное правило: стрелки идут <strong>только</strong> между разнотипными элементами. Место → переход или переход → место. Никогда место → место или переход → переход.</p>
+            <p style="margin-top:8px;font-size:.9em;color:var(--text2)">Стрелка «место → переход» означает: «это место — вход для этого перехода, переход забирает отсюда токены». Стрелка «переход → место» означает: «это место — выход, переход кладёт сюда токены».</p>
+        </div>
+
+        <!-- ============ ПРАВИЛО СРАБАТЫВАНИЯ ============ -->
+        <h2>Как это работает: правило срабатывания</h2>
+
+        <p>Весь механизм сети Петри сводится к одному простому правилу:</p>
+
+        <div class="card highlight">
+            <p><strong>Переход может сработать (он «разрешён»), если во всех его входных местах есть хотя бы по одному токену.</strong></p>
+            <p style="margin-top:10px"><strong>Когда переход срабатывает:</strong></p>
+            <ol>
+                <li>Из каждого входного места <strong>забирается</strong> один токен</li>
+                <li>В каждое выходное место <strong>кладётся</strong> один токен</li>
+            </ol>
+            <p style="margin-top:10px">И всё. Больше никаких правил. Вся мощь сетей Петри — из этого одного правила.</p>
+        </div>
+
+        <p>Давай проследим на простейшем примере:</p>
+
+        <div class="schema">
+            <p style="margin-bottom:16px;font-size:.9em;color:var(--text2)">До срабатывания:</p>
+            <div style="display:flex;align-items:center;justify-content:center;gap:16px">
+                <div style="text-align:center">
+                    <div class="pn-place" style="border-color:var(--green)"><span class="pn-token"></span></div>
+                    <div style="font-size:.75em;color:var(--text2);margin-top:4px">p₁ (1 токен)</div>
+                </div>
+                <div style="color:var(--text2)">→</div>
+                <div style="text-align:center">
+                    <div class="pn-trans">t₁</div>
+                </div>
+                <div style="color:var(--text2)">→</div>
+                <div style="text-align:center">
+                    <div class="pn-place"><span style="color:var(--text2);font-size:.8em">0</span></div>
+                    <div style="font-size:.75em;color:var(--text2);margin-top:4px">p₂ (0 токенов)</div>
+                </div>
+            </div>
+
+            <p style="margin:20px 0 16px;font-size:.9em;color:var(--orange)">t₁ разрешён (в p₁ есть токен). Срабатывает!</p>
+
+            <p style="margin-bottom:16px;font-size:.9em;color:var(--text2)">После срабатывания:</p>
+            <div style="display:flex;align-items:center;justify-content:center;gap:16px">
+                <div style="text-align:center">
+                    <div class="pn-place"><span style="color:var(--text2);font-size:.8em">0</span></div>
+                    <div style="font-size:.75em;color:var(--text2);margin-top:4px">p₁ (0 токенов)</div>
+                </div>
+                <div style="color:var(--text2)">→</div>
+                <div style="text-align:center">
+                    <div class="pn-trans">t₁</div>
+                </div>
+                <div style="color:var(--text2)">→</div>
+                <div style="text-align:center">
+                    <div class="pn-place" style="border-color:var(--green)"><span class="pn-token"></span></div>
+                    <div style="font-size:.75em;color:var(--text2);margin-top:4px">p₂ (1 токен)</div>
+                </div>
+            </div>
+            <p style="margin-top:16px;font-size:.85em;color:var(--text2)">Токен «перетёк» из p₁ в p₂. Теперь t₁ больше не разрешён (в p₁ пусто).</p>
+        </div>
+
+        <!-- ============ ПАТТЕРНЫ ============ -->
+        <h2>Базовые паттерны: что умеют сети Петри</h2>
+
+        <p>Из простого правила «забрал — положил» вырастают сложные поведения. Вот основные паттерны — запомни их, они будут встречаться повсюду.</p>
+
+        <h3>Последовательность</h3>
+
+        <div class="card">
+            <p>Самое простое: цепочка мест и переходов. Токен идёт по цепочке слева направо, как в FSM.</p>
+            <p style="text-align:center;margin:12px 0;font-size:.9em;color:var(--text2)">p₁ → t₁ → p₂ → t₂ → p₃</p>
+            <p>Пока токен в p₁ — можно только t₁. После t₁ — токен в p₂, можно только t₂. Полный аналог конечного автомата.</p>
+        </div>
+
+        <h3>Ветвление (выбор)</h3>
+
+        <div class="card">
+            <p>Из одного места выходят стрелки к <strong>нескольким</strong> переходам. Токен один — сработает только один из переходов. Какой именно — не определено. Это <strong>недетерминированный выбор</strong>.</p>
+            <p style="text-align:center;margin:12px 0;font-size:.9em;color:var(--text2)">
+                t₁ ← p₁ → t₂<br>
+                (токен в p₁: сработает либо t₁, либо t₂ — но не оба)
+            </p>
+            <p><strong>Пример из жизни:</strong> деталь на конвейере. Впереди развилка — налево на фрезу, направо на сверло. Деталь поедет только в одну сторону.</p>
+        </div>
+
+        <h3>Параллелизм (разветвление / fork)</h3>
+
+        <div class="card success">
+            <p>Один переход имеет <strong>несколько выходных мест</strong>. При срабатывании токены появляются во всех выходных местах <strong>одновременно</strong>. Так один процесс порождает несколько параллельных.</p>
+            <p style="text-align:center;margin:12px 0;font-size:.9em;color:var(--text2)">
+                p₁ → t₁ → p₂<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↘ p₃<br>
+                (t₁ сработал: токен из p₁ исчез, появились токены в p₂ И в p₃)
+            </p>
+            <p><strong>Вот он, параллелизм!</strong> Теперь в системе два токена — два независимых процесса. FSM так не умеет.</p>
+            <p style="margin-top:8px"><strong>Пример:</strong> заказ в ресторане отправлен. Одновременно: кухня начинает готовить (токен в «кухня работает») и бар начинает делать напиток (токен в «бар работает»).</p>
+        </div>
+
+        <h3>Синхронизация (слияние / join)</h3>
+
+        <div class="card success">
+            <p>Переход с <strong>несколькими входными местами</strong>. Он сработает только когда во ВСЕХ входных местах есть токены. Это «ждём самого медленного».</p>
+            <p style="text-align:center;margin:12px 0;font-size:.9em;color:var(--text2)">
+                p₂ → t₂ ← p₃<br>
+                (t₂ сработает только когда есть токены И в p₂, И в p₃)
+            </p>
+            <p><strong>Пример:</strong> блюдо и напиток готовы — только тогда официант несёт заказ. Если кухня закончила, а бар ещё нет — ждём.</p>
+            <p style="margin-top:8px;font-size:.9em;color:var(--text2)">В программировании: <code>Promise.all()</code>, <code>pthread_join()</code>, barrier. Всё это — паттерн «join» из сетей Петри.</p>
+        </div>
+
+        <h3>Взаимное исключение (мьютекс)</h3>
+
+        <div class="card warn">
+            <p>Одно место с <strong>одним токеном</strong>, к которому подключены два перехода. Токен один — значит, сработать может только один из переходов. Второй будет ждать, пока токен вернётся.</p>
+            <p style="margin-top:10px"><strong>Это и есть мьютекс.</strong> Место с одним токеном — это «ключ» или «пропуск». Кто взял — тот работает. Остальные ждут.</p>
+            <p style="margin-top:8px"><strong>Пример:</strong> принтер в офисе. Один принтер (один токен в месте «принтер свободен»). Два сотрудника хотят печатать. Первый «забирает» токен (начинает печать), второй ждёт. Когда первый закончил — «возвращает» токен, второй может начать.</p>
+        </div>
+
+        <!-- ============ ЖИВОЙ ПРИМЕР ============ -->
+        <h2>Живой пример: два робота и одна дрель</h2>
+
+        <p>Теперь соберём всё вместе на конкретной задаче. Два робота работают на производственной линии. Каждый делает своё: берёт деталь, обрабатывает дрелью, кладёт обратно. Но дрель <strong>одна на двоих</strong> — одновременно её использовать нельзя.</p>
+
+        <h3>Шаг 1: определяем места</h3>
+
+        <div class="card highlight">
+            <ul>
+                <li><strong>p₁</strong> — Робот A свободен (ждёт работы)</li>
+                <li><strong>p₂</strong> — Робот A работает с дрелью</li>
+                <li><strong>p₃</strong> — Робот B свободен</li>
+                <li><strong>p₄</strong> — Робот B работает с дрелью</li>
+                <li><strong>p₅</strong> — Дрель свободна</li>
+            </ul>
+        </div>
+
+        <h3>Шаг 2: определяем переходы</h3>
+
+        <div class="card highlight">
+            <ul>
+                <li><strong>t₁</strong> — Робот A берёт дрель. Входы: p₁ (робот свободен) + p₅ (дрель свободна). Выход: p₂ (робот работает)</li>
+                <li><strong>t₂</strong> — Робот A возвращает дрель. Вход: p₂. Выходы: p₁ + p₅</li>
+                <li><strong>t₃</strong> — Робот B берёт дрель. Входы: p₃ + p₅. Выход: p₄</li>
+                <li><strong>t₄</strong> — Робот B возвращает дрель. Вход: p₄. Выходы: p₃ + p₅</li>
+            </ul>
+        </div>
+
+        <h3>Шаг 3: начальная маркировка</h3>
+
+        <div class="card">
+            <p>«Маркировка» — это просто модное слово для «сколько токенов в каждом месте прямо сейчас». Начальная маркировка — это состояние при включении:</p>
+            <p style="text-align:center;font-size:1.05em;margin:12px 0">$M_0 = (p_1{:}1,\; p_2{:}0,\; p_3{:}1,\; p_4{:}0,\; p_5{:}1)$</p>
+            <p>Оба робота свободны (по токену в p₁ и p₃), дрель свободна (токен в p₅). Никто не работает (p₂ и p₄ пусты).</p>
+        </div>
+
+        <h3>Шаг 4: прокручиваем в голове</h3>
+
+        <p>Давай посмотрим, что произойдёт. В начальном состоянии какие переходы разрешены?</p>
+
+        <div class="card">
+            <p><strong>t₁</strong> — нужны токены в p₁ и p₅. Есть? Да, оба на месте. <span style="color:var(--green)">Разрешён.</span></p>
+            <p><strong>t₂</strong> — нужен токен в p₂. Есть? Нет, p₂ пуст. <span style="color:var(--red)">Не разрешён.</span></p>
+            <p><strong>t₃</strong> — нужны токены в p₃ и p₅. Есть? Да. <span style="color:var(--green)">Разрешён.</span></p>
+            <p><strong>t₄</strong> — нужен токен в p₄. Нет. <span style="color:var(--red)">Не разрешён.</span></p>
+        </div>
+
+        <p>Итого: разрешены t₁ и t₃. Оба хотят токен из p₅ (дрель). Но токен в p₅ один! Значит сработает <strong>только один из них</strong> — кто первый, тот и забрал дрель.</p>
+
+        <p>Допустим, сработал t₁ (робот A взял дрель):</p>
+
+        <div class="card">
+            <p>Новая маркировка: $M_1 = (p_1{:}0,\; p_2{:}1,\; p_3{:}1,\; p_4{:}0,\; p_5{:}0)$</p>
+            <p>Робот A работает (p₂=1), робот B свободен (p₃=1), но дрель занята (p₅=0).</p>
+            <p style="margin-top:8px">Теперь t₃ <strong>не разрешён</strong> — в p₅ нет токена. Робот B вынужден ждать. Вот оно — <strong>взаимное исключение</strong> в действии!</p>
+        </div>
+
+        <p>Когда робот A закончит (t₂ сработает), токен вернётся в p₁ и p₅. Теперь t₃ разрешён — робот B может взять дрель.</p>
+
+        <div class="card success">
+            <p><strong>Главный вывод:</strong> мы нигде не писали «если робот A работает, то робот B ждёт». Это поведение <strong>само возникает</strong> из структуры сети — из того, что p₅ содержит ровно один токен. Сеть Петри описывает не алгоритм, а <strong>правила игры</strong>, а поведение получается автоматически.</p>
+        </div>
+
+        <!-- ============ СРАВНЕНИЕ С FSM ============ -->
+        <h2>Сравнение: то же самое на FSM</h2>
+
+        <p>Для контраста — как выглядит та же задача на конечном автомате?</p>
+
+        <div class="card warn">
+            <p>Нужно перечислить все комбинации состояний двух роботов и дрели:</p>
+            <ol>
+                <li>(A свободен, B свободен, дрель свободна)</li>
+                <li>(A работает, B свободен, дрель у A)</li>
+                <li>(A свободен, B работает, дрель у B)</li>
+            </ol>
+            <p>Тут всего 3 состояния — терпимо. Но добавь третьего робота — уже 7. Четвёртого — 15. Десятого... не хочется считать.</p>
+            <p style="margin-top:8px">В сети Петри — просто добавляешь ещё два места (p₆, p₇) и два перехода (t₅, t₆) для нового робота. Размер сети растёт <strong>линейно</strong>, а не экспоненциально.</p>
+        </div>
+
+        <!-- ============ ФОРМАЛЬНОЕ ОПРЕДЕЛЕНИЕ ============ -->
+        <h2>Формальная запись</h2>
+
+        <p>Как и с FSM — сначала поняли идею, теперь запишем строго.</p>
+
+        <div class="card highlight">
+            <p>Сеть Петри — это четвёрка:</p>
+            <p style="font-size:1.15em;text-align:center;margin:16px 0">$$N = (P, T, F, W)$$</p>
+            <ul>
+                <li>$P$ — конечное множество <strong>мест</strong>. Для нашего примера: $P = \{p_1, p_2, p_3, p_4, p_5\}$</li>
+                <li>$T$ — конечное множество <strong>переходов</strong>. $T = \{t_1, t_2, t_3, t_4\}$</li>
+                <li>$F$ — множество <strong>дуг</strong> (стрелок). Каждая дуга идёт либо от места к переходу, либо от перехода к месту: $F \subseteq (P \times T) \cup (T \times P)$</li>
+                <li>$W$ — <strong>вес</strong> дуги: сколько токенов она передаёт. Обычно $W = 1$ (по одному токену), но можно и больше</li>
+            </ul>
+            <p style="margin-top:12px">Плюс <strong>начальная маркировка</strong> $M_0: P \rightarrow \mathbb{N}$ — сколько токенов в каждом месте при старте.</p>
+        </div>
+
+        <p>Правило срабатывания записывается так:</p>
+
+        <div class="card">
+            <p><strong>Переход $t$ разрешён при маркировке $M$, если:</strong></p>
+            <p style="text-align:center;font-size:1.05em;margin:12px 0">$$\forall p \in {}^\bullet t: \quad M(p) \geq W(p, t)$$</p>
+            <p>Здесь ${}^\bullet t$ — это «входные места» перехода $t$ (все места, из которых в $t$ идут стрелки). Запись $M(p) \geq W(p, t)$ означает: «токенов в месте $p$ не меньше, чем вес дуги из $p$ в $t$».</p>
+            <p style="margin-top:12px"><strong>После срабатывания:</strong></p>
+            <p style="text-align:center;font-size:1.05em;margin:12px 0">$$M'(p) = M(p) - W(p, t) + W(t, p)$$</p>
+            <p>Из входных мест убавилось, в выходные прибавилось. Если место не связано с переходом — ничего не меняется.</p>
+        </div>
+
+        <!-- ============ ЧТО МОЖНО ПРОВЕРИТЬ ============ -->
+        <h2>Что можно проверить</h2>
+
+        <p>Сети Петри, как и FSM, позволяют задавать формальные вопросы. Но спектр вопросов шире — появляются новые, специфичные для параллельных систем:</p>
+
+        <div class="card">
+            <h3>Взаимное исключение</h3>
+            <p>«Могут ли два робота одновременно держать дрель?» Формально: достижима ли маркировка, в которой $M(p_2) \geq 1$ <em>и</em> $M(p_4) \geq 1$? Если нет — взаимное исключение гарантировано.</p>
+            <p style="font-size:.9em;color:var(--text2)">В нашем примере ответ — нет, не достижима. Потому что p₂=1 и p₄=1 суммарно требуют, чтобы из p₅ забрали 2 токена, а у нас их всего 1. Это можно доказать формально через инварианты (об этом ниже).</p>
+        </div>
+
+        <div class="card">
+            <h3>Отсутствие тупиков (deadlock-freedom)</h3>
+            <p>«Может ли система полностью застрять — так, что ни один переход не разрешён?» Если да — это тупик. Два процесса ждут друг друга, и оба стоят вечно.</p>
+            <p style="font-size:.9em;color:var(--text2)">Классический пример тупика: два робота, два инструмента. Робот A взял дрель и ждёт отвёртку. Робот B взял отвёртку и ждёт дрель. Оба стоят. Сеть Петри позволяет обнаружить это до запуска системы.</p>
+        </div>
+
+        <div class="card">
+            <h3>Ограниченность</h3>
+            <p>«Не будут ли токены бесконечно накапливаться?» Если в каком-то месте число токенов может расти без предела — это аналог переполнения буфера или утечки памяти.</p>
+            <p style="font-size:.9em;color:var(--text2)">Сеть, в которой число токенов в каждом месте всегда ≤ $k$, называется $k$-ограниченной. Если $k = 1$ — она «безопасная» (safe). Наш пример с роботами — безопасная сеть.</p>
+        </div>
+
+        <div class="card">
+            <h3>Живость</h3>
+            <p>«Гарантировано ли, что каждый переход сможет когда-нибудь сработать снова?» Если переход навсегда заблокирован — часть системы «мертва». Живая сеть — та, в которой каждый переход рано или поздно снова станет разрешённым.</p>
+        </div>
+
+        <!-- ============ ИНВАРИАНТЫ ============ -->
+        <h2>Инварианты: доказательства «на салфетке»</h2>
+
+        <p>Один из самых мощных приёмов анализа сетей Петри — <strong>инварианты</strong>. Это утверждения, которые верны <em>при любом выполнении</em> сети, вне зависимости от порядка срабатывания переходов.</p>
+
+        <div class="card highlight">
+            <p>Посмотри на нашу сеть с двумя роботами. Робот A либо свободен (токен в p₁), либо работает (токен в p₂). Третьего не дано. Значит:</p>
+            <p style="text-align:center;font-size:1.1em;margin:12px 0">$$M(p_1) + M(p_2) = 1 \quad \text{(всегда)}$$</p>
+            <p>Это инвариант. Его можно доказать, посмотрев на каждый переход: t₁ забирает из p₁ и кладёт в p₂ (сумма не меняется). t₂ забирает из p₂ и кладёт в p₁ (сумма не меняется). Все остальные переходы вообще не трогают p₁ и p₂.</p>
+        </div>
+
+        <p>Аналогично:</p>
+        <ul>
+            <li>$M(p_3) + M(p_4) = 1$ — робот B либо свободен, либо работает</li>
+            <li>$M(p_2) + M(p_4) + M(p_5) = 1$ — дрель всегда «где-то»: либо у робота A, либо у робота B, либо свободна</li>
+        </ul>
+
+        <p>Из последнего инварианта сразу следует: $M(p_2) + M(p_4) \leq 1$ — оба робота не могут одновременно работать с дрелью. <strong>Взаимное исключение доказано.</strong> Без перебора состояний, без моделирования — чистая математика.</p>
+
+        <div class="card">
+            <p style="font-size:.9em;color:var(--text2)">Такие инварианты называются <strong>S-инварианты</strong> (place invariants). Они находятся как решения уравнения $\vec{y}^T \cdot C = 0$, где $C$ — матрица инцидентности сети. Но пугаться матриц не стоит — для небольших сетей инварианты видны невооружённым глазом.</p>
+        </div>
+
+        <!-- ============ МАТРИЧНОЕ ПРЕДСТАВЛЕНИЕ ============ -->
+        <h2>Матричное представление (для любознательных)</h2>
+
+        <p>Сеть Петри можно записать матрицей — это полезно для компьютерного анализа. Идея простая: для каждого перехода записываем, сколько токенов он забирает из каждого места и сколько кладёт.</p>
+
+        <div class="card">
+            <p>Для нашего примера матрица инцидентности $C$ (строки — места, столбцы — переходы, значение = «сколько добавляется минус сколько забирается»):</p>
+            <p style="text-align:center;font-size:1em;margin:12px 0">
+            $$C = \begin{pmatrix} -1 & 1 & 0 & 0 \\ 1 & -1 & 0 & 0 \\ 0 & 0 & -1 & 1 \\ 0 & 0 & 1 & -1 \\ -1 & 1 & -1 & 1 \end{pmatrix}$$
+            </p>
+            <p style="font-size:.9em;color:var(--text2)">Например, столбец t₁: p₁ теряет 1 (−1), p₂ получает 1 (+1), p₅ теряет 1 (−1). Остальные не затронуты (0).</p>
+            <p style="margin-top:10px">Чтобы найти маркировку после серии срабатываний:</p>
+            <p style="text-align:center;font-size:1.05em;margin:8px 0">$$M' = M_0 + C \cdot \vec{u}$$</p>
+            <p style="font-size:.9em;color:var(--text2)">где $\vec{u}$ — вектор «сколько раз сработал каждый переход». Если $\vec{u} = (1, 1, 0, 0)^T$ (робот A взял и вернул дрель), то $M' = M_0 + C \cdot \vec{u} = M_0$ — вернулись в начало.</p>
+        </div>
+
+        <!-- ============ ОГРАНИЧЕНИЯ ============ -->
+        <h2>Ограничения сетей Петри</h2>
+
+        <p>Сети Петри решают проблему параллелизма и ресурсов. Но у них свои слабости:</p>
+
+        <div class="card warn">
+            <ul>
+                <li><strong>Нет иерархии.</strong> Все места и переходы — на одном уровне. При 50+ элементах сеть становится нечитаемой. Для иерархии нужны Statecharts (глава 3).</li>
+                <li><strong>Сложный анализ.</strong> Проверка достижимости в общем случае — задача огромной вычислительной сложности (EXPSPACE). Для больших сетей точный анализ может быть непрактичным.</li>
+                <li><strong>Нет данных.</strong> Классические токены анонимны — они все одинаковые. Нельзя сказать «этот токен — деталь типа А, а тот — типа Б». Для этого есть расширение — цветные сети Петри.</li>
+                <li><strong>Нет времени.</strong> Классическая сеть Петри не знает, сколько длится переход. Для анализа производительности нужны временные сети Петри (глава 4).</li>
+            </ul>
+        </div>
+
+        <!-- ============ ИТОГО ============ -->
+        <h2>Что запомнить</h2>
+
+        <div class="card success">
+            <ul>
+                <li>Сеть Петри = места (кружки) + переходы (прямоугольники) + токены (фишки)</li>
+                <li>Переход срабатывает, когда во всех входных местах есть токены. Забирает из входов, кладёт в выходы</li>
+                <li>Базовые паттерны: последовательность, ветвление, fork (параллелизм), join (синхронизация), мьютекс</li>
+                <li>Параллелизм = несколько токенов в разных местах одновременно. Ресурс = место с ограниченным числом токенов</li>
+                <li>Инварианты позволяют доказывать свойства (взаимное исключение, сохранение ресурсов) математически</li>
+                <li>Проблемы: нет иерархии, нет данных, нет времени — для этого есть расширения</li>
+            </ul>
+        </div>
+
+        <h2>Дальше</h2>
+
+        <div class="card success">
+            <p>Сети Петри справляются с параллелизмом, но не с иерархией. Когда состояний десятки — граф превращается в кашу. В <a href="3-statecharts.html" style="color:var(--green);font-weight:600">главе 3: Statecharts</a> разберёмся, как навести порядок с помощью вложенных состояний и параллельных регионов.</p>
+        </div>
+    </div>
+</body>
+</html>
