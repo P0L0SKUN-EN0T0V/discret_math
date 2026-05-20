@@ -15,7 +15,6 @@
         .sidebar::-webkit-scrollbar{width:6px}
         .sidebar::-webkit-scrollbar-track{background:var(--sidebar)}
         .sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-        .sidebar::-webkit-scrollbar-thumb:hover{background:#3a3d4e}
         .sidebar{scrollbar-width:thin;scrollbar-color:var(--border) var(--sidebar)}
         .sidebar h3{color:var(--accent);padding:0 20px;margin-bottom:16px;font-size:1em}
         .sidebar a{display:block;padding:8px 20px;color:var(--text2);text-decoration:none;font-size:.9em;border-left:3px solid transparent;transition:all .2s}
@@ -33,23 +32,11 @@
         .card.highlight{border-left:4px solid var(--accent)}
         .card.warn{border-left:4px solid var(--orange)}
         .card.success{border-left:4px solid var(--green)}
-        .tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.8em;font-weight:600;margin:2px 4px 2px 0}
-        .tag.blue{background:rgba(108,158,255,.15);color:var(--accent)}
-        .tag.green{background:rgba(74,222,128,.15);color:var(--green)}
-        .tag.orange{background:rgba(251,146,60,.15);color:var(--orange)}
-        .tag.purple{background:rgba(167,139,250,.15);color:var(--accent2)}
         ul,ol{padding-left:24px;margin:10px 0}li{margin:8px 0}
         code{background:rgba(108,158,255,.1);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:.9em}
-        pre{background:#141620;border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:.85em;margin:14px 0;line-height:1.6}
-        table{width:100%;border-collapse:collapse;margin:12px 0}
-        th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
-        th{color:var(--accent);font-weight:600}
-        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-        .schema{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:32px 24px;margin:20px 0;text-align:center}
         .num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:rgba(108,158,255,.15);color:var(--accent);font-weight:700;font-size:.85em;margin-right:8px}
         @media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:24px 16px}}
-        @media(max-width:700px){.grid{grid-template-columns:1fr}}
-        @media print{body{display:block}.sidebar{display:none}.main{margin-left:0}body{background:#fff;color:#1a1a1a}.card{background:#f9f9f9;border-color:#ddd}h1{-webkit-text-fill-color:#2563eb}h2{color:#2563eb}h3{color:#7c3aed}code{background:#f0f0f0;color:#2563eb}pre{background:#f5f5f5;border-color:#ddd}}
+        @media print{body{display:block}.sidebar{display:none}.main{margin-left:0}body{background:#fff;color:#1a1a1a}.card{background:#f9f9f9;border-color:#ddd}h1{-webkit-text-fill-color:#2563eb}h2{color:#2563eb}h3{color:#7c3aed}code{background:#f0f0f0;color:#2563eb}}
     </style>
 </head>
 <body>
@@ -58,100 +45,39 @@
 
     <div class="main">
         <h1>Формализмы моделирования дискретных систем</h1>
-        <p class="subtitle">Конечные автоматы, сети Петри и другие инструменты для описания поведения систем</p>
-
-        <h2>О чём это</h2>
+        <p class="subtitle">Методичка: от «зачем это вообще нужно» до «какой инструмент выбрать под задачу»</p>
 
         <div class="card highlight">
-            <p><strong>Формализм моделирования</strong> — это математический язык для описания поведения системы. Вместо того чтобы объяснять словами «когда нажали кнопку — включается мотор, а когда отпустили — выключается», мы рисуем точную модель с состояниями, переходами и правилами.</p>
-            <p style="margin-top:12px">Зачем: модель можно <strong>анализировать</strong> (найти тупики, гонки, недостижимые состояния), <strong>верифицировать</strong> (доказать что система не зависнет) и <strong>автоматически реализовать</strong> (сгенерировать код).</p>
+            <p>Это не справочник и не энциклопедия. Это методичка, написанная так, как если бы добрый преподаватель сел рядом и объяснил на пальцах: что за звери такие «сети Петри» и «конечные автоматы», зачем они нужны, и почему инженеру без них — как строителю без чертежей.</p>
+            <p style="margin-top:10px">Каждая глава — отдельная история. Читай по порядку: каждая следующая опирается на предыдущую.</p>
         </div>
 
-        <h2>Какие формализмы существуют</h2>
+        <h2>Содержание</h2>
 
-        <p>Каждый формализм заточен под свой класс задач. Вот основные — от простых к сложным:</p>
+        <ol>
+            <li><span class="num">0</span><a href="sections/0-why-formal-models.html" style="color:var(--accent)"><strong>Зачем вообще формальные модели</strong></a><br><span style="color:var(--text2);font-size:.9em">Почему слов недостаточно. Что бывает, когда система сложная, а модели нет. Реальные истории.</span></li>
 
-        <div class="grid">
-            <div class="card">
-                <h3><a href="sections/2-fsm.html" style="color:var(--accent)">Конечные автоматы (FSM)</a></h3>
-                <span class="tag green">базовый</span>
-                <p style="font-size:.9em;color:var(--text2)">Состояния + переходы по событиям. Самый простой и понятный формализм. Основа всех остальных.</p>
-            </div>
-            <div class="card">
-                <h3><a href="sections/3-petri-nets.html" style="color:var(--accent)">Сети Петри</a></h3>
-                <span class="tag blue">параллелизм</span>
-                <p style="font-size:.9em;color:var(--text2)">Места + переходы + токены. Умеют моделировать параллельные процессы, синхронизацию, ресурсы.</p>
-            </div>
-            <div class="card">
-                <h3><a href="sections/4-statecharts.html" style="color:var(--accent)">Statecharts (Харел)</a></h3>
-                <span class="tag purple">иерархия</span>
-                <p style="font-size:.9em;color:var(--text2)">FSM на стероидах: вложенные состояния, параллельные регионы, история. Стандарт UML.</p>
-            </div>
-            <div class="card">
-                <h3><a href="sections/5-timed-petri.html" style="color:var(--accent)">Временные сети Петри</a></h3>
-                <span class="tag orange">время</span>
-                <p style="font-size:.9em;color:var(--text2)">Сети Петри с задержками. Анализ производительности, тайм-ауты, real-time системы.</p>
-            </div>
-            <div class="card">
-                <h3><a href="sections/6-behaviour-trees.html" style="color:var(--accent)">Деревья поведения</a></h3>
-                <span class="tag green">робототехника</span>
-                <p style="font-size:.9em;color:var(--text2)">Дерево из задач с приоритетами. Модульность и переиспользование. Стандарт в робототехнике и геймдеве.</p>
-            </div>
-            <div class="card">
-                <h3><a href="sections/7-grafcet.html" style="color:var(--accent)">GRAFCET / SFC</a></h3>
-                <span class="tag orange">промышленность</span>
-                <p style="font-size:.9em;color:var(--text2)">Стандарт IEC 61131-3 для ПЛК. Шаги + переходы + параллельные ветви. Язык заводской автоматики.</p>
-            </div>
-        </div>
+            <li><span class="num">1</span><a href="sections/1-fsm.html" style="color:var(--accent)"><strong>Конечные автоматы — основа всего</strong></a><br><span style="color:var(--text2);font-size:.9em">Состояния, переходы, события. Проектируем кофемашину. Автоматы Мура и Мили. Где FSM ломается.</span></li>
 
-        <div class="card">
-            <h3><a href="sections/8-others.html" style="color:var(--accent2)">Другие формализмы</a></h3>
-            <p style="font-size:.9em;color:var(--text2)">Цепи Маркова, сети массового обслуживания, алгебры процессов (CSP, CCS), клеточные автоматы, гибридные автоматы — краткий обзор и когда их применять.</p>
-        </div>
+            <li><span class="num">2</span><a href="sections/2-petri-nets.html" style="color:var(--accent)"><strong>Сети Петри — когда процессов больше одного</strong></a><br><span style="color:var(--text2);font-size:.9em">Токены, места, переходы. Два робота и одна дрель. Параллелизм, синхронизация, ресурсы.</span></li>
 
-        <h2>Как они связаны</h2>
+            <li><span class="num">3</span><a href="sections/3-statecharts.html" style="color:var(--accent)"><strong>Statecharts — наводим порядок в хаосе</strong></a><br><span style="color:var(--text2);font-size:.9em">Вложенные состояния, параллельные регионы, история. Бортовой компьютер автомобиля.</span></li>
 
-        <div class="schema">
-            <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:16px">
-                <div style="border:2px solid var(--green);border-radius:8px;padding:14px 20px;min-width:140px">
-                    <strong style="color:var(--green)">FSM</strong><br>
-                    <span style="font-size:.8em;color:var(--text2)">последовательная<br>логика</span>
-                </div>
-                <div style="color:var(--text2);font-size:.9em">→ расширяем<br>иерархией</div>
-                <div style="border:2px solid var(--accent2);border-radius:8px;padding:14px 20px;min-width:140px">
-                    <strong style="color:var(--accent2)">Statecharts</strong><br>
-                    <span style="font-size:.8em;color:var(--text2)">иерархия +<br>параллелизм</span>
-                </div>
-            </div>
-            <div style="margin:16px 0;color:var(--text2)">↓ добавляем ресурсы и токены</div>
-            <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:16px">
-                <div style="border:2px solid var(--accent);border-radius:8px;padding:14px 20px;min-width:140px">
-                    <strong style="color:var(--accent)">Сети Петри</strong><br>
-                    <span style="font-size:.8em;color:var(--text2)">параллелизм +<br>ресурсы</span>
-                </div>
-                <div style="color:var(--text2);font-size:.9em">→ добавляем<br>время</div>
-                <div style="border:2px solid var(--orange);border-radius:8px;padding:14px 20px;min-width:140px">
-                    <strong style="color:var(--orange)">Временные СП</strong><br>
-                    <span style="font-size:.8em;color:var(--text2)">real-time +<br>производительность</span>
-                </div>
-            </div>
-            <div style="margin:16px 0;color:var(--text2)">↓ прикладные специализации</div>
-            <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:16px">
-                <div style="border:2px solid var(--green);border-radius:8px;padding:14px 20px;min-width:140px">
-                    <strong style="color:var(--green)">BT</strong><br>
-                    <span style="font-size:.8em;color:var(--text2)">роботы +<br>игры</span>
-                </div>
-                <div style="border:2px solid var(--orange);border-radius:8px;padding:14px 20px;min-width:140px">
-                    <strong style="color:var(--orange)">GRAFCET</strong><br>
-                    <span style="font-size:.8em;color:var(--text2)">ПЛК +<br>заводы</span>
-                </div>
-            </div>
-        </div>
+            <li><span class="num">4</span><a href="sections/4-time.html" style="color:var(--accent)"><strong>Время в моделях</strong></a><br><span style="color:var(--text2);font-size:.9em">Задержки, тайм-ауты, производительность. Ищем узкое место на конвейере.</span></li>
 
-        <h2>С чего начать</h2>
+            <li><span class="num">5</span><a href="sections/5-behaviour-trees.html" style="color:var(--accent)"><strong>Деревья поведения — как управляют роботами</strong></a><br><span style="color:var(--text2);font-size:.9em">Tick, SUCCESS/FAILURE. Робот-уборщик. Почему BT победил FSM в робототехнике.</span></li>
+
+            <li><span class="num">6</span><a href="sections/6-grafcet.html" style="color:var(--accent)"><strong>GRAFCET — язык заводов</strong></a><br><span style="color:var(--text2);font-size:.9em">Шаги, переходы, действия. Как программируют промышленные контроллеры.</span></li>
+
+            <li><span class="num">7</span><a href="sections/7-others.html" style="color:var(--accent)"><strong>Остальные инструменты</strong></a><br><span style="color:var(--text2);font-size:.9em">Цепи Маркова, алгебры процессов, гибридные автоматы — коротко и по делу.</span></li>
+
+            <li><span class="num">8</span><a href="sections/8-how-to-choose.html" style="color:var(--accent)"><strong>Как выбрать формализм под задачу</strong></a><br><span style="color:var(--text2);font-size:.9em">Дерево решений. Что с чем комбинируют на практике.</span></li>
+        </ol>
+
+        <h2>Начинаем</h2>
 
         <div class="card success">
-            <p>Переходи к <a href="sections/1-what-are-formalisms.html" style="color:var(--green);font-weight:600">разделу 1: Что такое формализмы</a> — там объясняется зачем вообще нужны формальные модели, как они устроены, и что общего между всеми формализмами.</p>
+            <p>Переходи к <a href="sections/0-why-formal-models.html" style="color:var(--green);font-weight:600">главе 0</a> — там разберёмся, зачем инженеру вообще рисовать какие-то модели, когда можно «просто написать код».</p>
         </div>
     </div>
 </body>
