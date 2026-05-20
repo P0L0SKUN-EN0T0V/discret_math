@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1. Конечные автоматы — основа всего</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+    <style>
+        :root{--bg:#0f1117;--card:#1a1d2e;--border:#2a2d3e;--accent:#6c9eff;--accent2:#a78bfa;--green:#4ade80;--orange:#fb923c;--red:#f87171;--text:#e2e8f0;--text2:#94a3b8;--sidebar:#151825}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.8;display:flex;min-height:100vh}
+        .sidebar{width:260px;background:var(--sidebar);border-right:1px solid var(--border);padding:20px 0;position:fixed;height:100vh;overflow-y:auto}
+        .sidebar::-webkit-scrollbar{width:6px}
+        .sidebar::-webkit-scrollbar-track{background:var(--sidebar)}
+        .sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        .sidebar{scrollbar-width:thin;scrollbar-color:var(--border) var(--sidebar)}
+        .sidebar h3{color:var(--accent);padding:0 20px;margin-bottom:16px;font-size:1em}
+        .sidebar a{display:block;padding:8px 20px;color:var(--text2);text-decoration:none;font-size:.9em;border-left:3px solid transparent;transition:all .2s}
+        .sidebar a:hover{background:rgba(108,158,255,.08);color:var(--text)}
+        .sidebar a.active{border-left-color:var(--accent);color:var(--accent);background:rgba(108,158,255,.1)}
+        .sidebar .sep{height:1px;background:var(--border);margin:12px 20px}
+        .sidebar .section-title{color:var(--text2);font-size:.75em;text-transform:uppercase;letter-spacing:1px;padding:12px 20px 4px;font-weight:600}
+        .main{margin-left:260px;padding:48px 40px;max-width:920px;width:100%}
+        h1{font-size:2.1em;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+        .subtitle{color:var(--text2);margin-bottom:36px;font-size:1.05em}
+        h2{font-size:1.4em;color:var(--accent);margin:44px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        h3{font-size:1.1em;color:var(--accent2);margin:28px 0 12px}
+        p{margin:10px 0}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin:16px 0}
+        .card.highlight{border-left:4px solid var(--accent)}
+        .card.warn{border-left:4px solid var(--orange)}
+        .card.success{border-left:4px solid var(--green)}
+        .card.danger{border-left:4px solid var(--red)}
+        ul,ol{padding-left:24px;margin:10px 0}li{margin:8px 0}
+        code{background:rgba(108,158,255,.1);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:.9em}
+        pre{background:#141620;border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:.85em;margin:14px 0;line-height:1.6}
+        table{width:100%;border-collapse:collapse;margin:12px 0}
+        th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+        th{color:var(--accent);font-weight:600}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .schema{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:32px 24px;margin:20px 0;text-align:center}
+        .num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:rgba(108,158,255,.15);color:var(--accent);font-weight:700;font-size:.85em;margin-right:8px}
+        @media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:24px 16px}}
+        @media(max-width:700px){.grid{grid-template-columns:1fr}}
+        @media print{body{display:block}.sidebar{display:none}.main{margin-left:0}body{background:#fff;color:#1a1a1a}.card{background:#f9f9f9;border-color:#ddd}h1{-webkit-text-fill-color:#2563eb}h2{color:#2563eb}h3{color:#7c3aed}code{background:#f0f0f0;color:#2563eb}pre{background:#f5f5f5;border-color:#ddd}}
+    </style>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar"></nav>
+    <script src="../nav.js"></script>
+
+    <div class="main">
+        <h1>Конечные автоматы — основа всего</h1>
+        <p class="subtitle">Finite State Machine (FSM) — самый простой и фундаментальный инструмент</p>
+
+        <!-- ============ ИДЕЯ ============ -->
+        <h2>Главная идея</h2>
+
+        <p>Конечный автомат — это, по сути, самый честный способ записать фразу «система находится в каком-то состоянии, и при наступлении какого-то события переходит в другое состояние».</p>
+
+        <p>Ты уже знаком с конечными автоматами, даже если не знаешь этого слова. Вот примеры из жизни:</p>
+
+        <div class="card">
+            <p><strong>Турникет в метро.</strong> Два состояния: заблокирован и разблокирован. Два события: приложил карту и прошёл. Приложил карту в заблокированном — разблокировался. Прошёл через разблокированный — заблокировался. Приложил карту к уже разблокированному — ничего не происходит. Прошёл в заблокированный — получил по ногам.</p>
+        </div>
+
+        <div class="card">
+            <p><strong>Светофор.</strong> Три состояния: красный, жёлтый, зелёный. Одно событие: таймер. Красный → зелёный → жёлтый → красный → ... по кругу.</p>
+        </div>
+
+        <div class="card">
+            <p><strong>Дверной замок.</strong> Два состояния: открыт и закрыт. Два события: повернуть ключ вправо и повернуть ключ влево. Только одно из них в каждом состоянии что-то меняет.</p>
+        </div>
+
+        <p>Во всех примерах одна и та же структура: <strong>конечный набор состояний</strong>, <strong>конечный набор событий</strong>, и <strong>правила перехода</strong> — что происходит при каждом событии в каждом состоянии. Это и есть конечный автомат.</p>
+
+        <!-- ============ ПРИМЕР: КОФЕМАШИНА ============ -->
+        <h2>Живой пример: проектируем кофемашину</h2>
+
+        <p>Давай спроектируем управление простой офисной кофемашиной. Не торопясь, шаг за шагом.</p>
+
+        <h3>Шаг 1: определяем состояния</h3>
+
+        <p>Первый вопрос: «в каких состояниях может находиться кофемашина?» Подумай перед тем как читать дальше.</p>
+
+        <div class="card highlight">
+            <p>Вот что получается:</p>
+            <ul>
+                <li><code>ОЖИДАНИЕ</code> — машина стоит, ждёт пока кто-то нажмёт кнопку</li>
+                <li><code>ВЫБОР_НАПИТКА</code> — человек нажал кнопку «старт», на экране меню</li>
+                <li><code>ПРИГОТОВЛЕНИЕ</code> — машина молет зёрна, варит кофе, наливает</li>
+                <li><code>ГОТОВО</code> — кофе готов, стаканчик стоит, ждём пока заберут</li>
+                <li><code>ОШИБКА</code> — кончилась вода, застряло зерно, сломался мотор</li>
+            </ul>
+            <p style="margin-top:10px;font-size:.9em;color:var(--text2)">Пять состояний. Кофемашина <strong>всегда</strong> ровно в одном из них. Не может быть «между» состояниями. Не может быть одновременно в двух.</p>
+        </div>
+
+        <h3>Шаг 2: определяем события</h3>
+
+        <p>Второй вопрос: «что может произойти?» — какие сигналы приходят извне.</p>
+
+        <div class="card highlight">
+            <ul>
+                <li><code>кнопка_старт</code> — человек нажал кнопку на панели</li>
+                <li><code>выбран_напиток</code> — человек выбрал «эспрессо» или «капучино»</li>
+                <li><code>приготовлено</code> — внутренний сигнал: кофе готов</li>
+                <li><code>стакан_забран</code> — датчик: стаканчик убрали</li>
+                <li><code>неисправность</code> — что-то пошло не так</li>
+                <li><code>сброс</code> — техник нажал кнопку сброса</li>
+                <li><code>таймаут</code> — прошло 30 секунд без действий</li>
+            </ul>
+        </div>
+
+        <h3>Шаг 3: описываем переходы</h3>
+
+        <p>Третий и главный вопрос: «что происходит при каждом событии в каждом состоянии?»</p>
+
+        <p>Вот тут начинается настоящая работа. Нужно пройти по <strong>каждой</strong> комбинации (состояние × событие) и записать: что делаем.</p>
+
+        <table>
+            <tr><th>Состояние</th><th>Событие</th><th>Куда переходим</th><th>Что делаем</th></tr>
+            <tr><td><code>ОЖИДАНИЕ</code></td><td>кнопка_старт</td><td><code>ВЫБОР_НАПИТКА</code></td><td>показать меню</td></tr>
+            <tr><td><code>ВЫБОР_НАПИТКА</code></td><td>выбран_напиток</td><td><code>ПРИГОТОВЛЕНИЕ</code></td><td>начать варить</td></tr>
+            <tr><td><code>ВЫБОР_НАПИТКА</code></td><td>таймаут</td><td><code>ОЖИДАНИЕ</code></td><td>погасить экран</td></tr>
+            <tr><td><code>ПРИГОТОВЛЕНИЕ</code></td><td>приготовлено</td><td><code>ГОТОВО</code></td><td>подать звуковой сигнал</td></tr>
+            <tr><td><code>ГОТОВО</code></td><td>стакан_забран</td><td><code>ОЖИДАНИЕ</code></td><td>—</td></tr>
+            <tr><td><code>ГОТОВО</code></td><td>таймаут</td><td><code>ОЖИДАНИЕ</code></td><td>мигнуть лампочкой</td></tr>
+            <tr><td><em>любое</em></td><td>неисправность</td><td><code>ОШИБКА</code></td><td>всё выключить, показать код ошибки</td></tr>
+            <tr><td><code>ОШИБКА</code></td><td>сброс</td><td><code>ОЖИДАНИЕ</code></td><td>самодиагностика</td></tr>
+        </table>
+
+        <p>Обрати внимание на строку «любое → неисправность → ОШИБКА». Это значит, что из <strong>каждого</strong> состояния при событии «неисправность» мы переходим в ОШИБКА. Не важно, варим мы кофе или ждём — ошибка есть ошибка.</p>
+
+        <h3>Шаг 4: рисуем граф</h3>
+
+        <p>Таблица — это одно представление автомата. Другое — <strong>граф</strong>: кружки (состояния) и стрелки (переходы). Граф нагляднее, таблица полнее. Обычно используют оба.</p>
+
+        <div class="schema">
+            <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px">
+                <div style="border:3px solid var(--green);border-radius:50%;width:90px;height:90px;display:flex;align-items:center;justify-content:center;font-size:.75em;font-weight:600;text-align:center;color:var(--green)">ОЖИДА-<br>НИЕ</div>
+                <div style="font-size:.8em;color:var(--text2);min-width:60px;text-align:center">кнопка<br>→</div>
+                <div style="border:2px solid var(--accent);border-radius:50%;width:90px;height:90px;display:flex;align-items:center;justify-content:center;font-size:.75em;font-weight:600;text-align:center;color:var(--accent)">ВЫБОР<br>НАПИТКА</div>
+                <div style="font-size:.8em;color:var(--text2);min-width:60px;text-align:center">выбрал<br>→</div>
+                <div style="border:2px solid var(--orange);border-radius:50%;width:90px;height:90px;display:flex;align-items:center;justify-content:center;font-size:.75em;font-weight:600;text-align:center;color:var(--orange)">ПРИГО-<br>ТОВЛ.</div>
+                <div style="font-size:.8em;color:var(--text2);min-width:60px;text-align:center">готово<br>→</div>
+                <div style="border:2px solid var(--accent2);border-radius:50%;width:90px;height:90px;display:flex;align-items:center;justify-content:center;font-size:.75em;font-weight:600;text-align:center;color:var(--accent2)">ГОТОВО</div>
+            </div>
+            <div style="margin-top:12px;font-size:.85em;color:var(--text2)">
+                ГОТОВО →(стакан забран)→ ОЖИДАНИЕ&nbsp;&nbsp;|&nbsp;&nbsp;Из любого →(неисправность)→ <span style="color:var(--red)">ОШИБКА</span> →(сброс)→ ОЖИДАНИЕ
+            </div>
+        </div>
+
+        <h3>Шаг 5: проверяем</h3>
+
+        <p>Теперь самое ценное — автомат можно <strong>проверить</strong>. Задаём вопросы:</p>
+
+        <div class="card success">
+            <p><strong>Есть ли тупики?</strong> Пройдёмся по каждому состоянию: есть ли хотя бы один выход? ОЖИДАНИЕ — да (кнопка_старт). ВЫБОР — да (выбран_напиток, таймаут). ПРИГОТОВЛЕНИЕ — да (приготовлено). ГОТОВО — да (стакан_забран, таймаут). ОШИБКА — да (сброс). Тупиков нет.</p>
+        </div>
+
+        <div class="card success">
+            <p><strong>Все ли состояния достижимы?</strong> Из ОЖИДАНИЕ → ВЫБОР → ПРИГОТОВЛЕНИЕ → ГОТОВО → ОЖИДАНИЕ. ОШИБКА достижима из любого. Все пять состояний достижимы. Мёртвого кода нет.</p>
+        </div>
+
+        <div class="card warn">
+            <p><strong>Все ли события обработаны?</strong> А вот тут интересно. Что если в состоянии ПРИГОТОВЛЕНИЕ придёт событие <code>кнопка_старт</code>? В нашей таблице этого перехода нет. Это значит — событие игнорируется. Нормально ли это? Может быть, стоит добавить «при нажатии кнопки во время приготовления — ничего не делать» явно, чтобы было видно, что это осознанное решение, а не забытый случай.</p>
+        </div>
+
+        <p>Вот это и есть сила формальной модели. Мы ещё не написали ни строчки кода, а уже нашли потенциальную дыру в логике.</p>
+
+        <!-- ============ ФОРМАЛЬНОЕ ОПРЕДЕЛЕНИЕ ============ -->
+        <h2>Формальная запись</h2>
+
+        <p>Теперь, когда идея понятна, запишем её математически. Не для красоты — а потому что математическая запись позволяет компьютеру с моделью работать (проверять, минимизировать, генерировать код).</p>
+
+        <div class="card highlight">
+            <p>Конечный автомат — это пятёрка:</p>
+            <p style="font-size:1.2em;text-align:center;margin:16px 0">$$\mathcal{A} = (Q, \Sigma, \delta, q_0, F)$$</p>
+            <p>Разберём каждый элемент:</p>
+            <ul>
+                <li>$Q$ — <strong>множество состояний</strong>. Для кофемашины: $Q = \{\text{ОЖИД}, \text{ВЫБОР}, \text{ПРИГОТ}, \text{ГОТОВО}, \text{ОШИБКА}\}$</li>
+                <li>$\Sigma$ — <strong>множество событий</strong> (входной алфавит). Это всё, на что система реагирует: $\Sigma = \{\text{кнопка}, \text{выбрал}, \text{приготовлено}, \ldots\}$</li>
+                <li>$\delta$ — <strong>функция переходов</strong>. Это и есть наша таблица: для каждой пары (состояние, событие) она говорит, куда перейти. Записывается как $\delta: Q \times \Sigma \rightarrow Q$</li>
+                <li>$q_0$ — <strong>начальное состояние</strong>. Для кофемашины: $q_0 = \text{ОЖИД}$</li>
+                <li>$F$ — <strong>допускающие (конечные) состояния</strong>. Это нужно, когда автомат используется для распознавания последовательностей (в теории формальных языков). Для систем управления обычно не важно — автомат работает бесконечно.</li>
+            </ul>
+        </div>
+
+        <p>Главное тут — $\delta$, функция переходов. Это сердце автомата. Вся таблица переходов, которую мы составили для кофемашины — это и есть $\delta$, записанная в явном виде.</p>
+
+        <div class="card">
+            <p><strong>Пример записи:</strong></p>
+            <p>$\delta(\text{ОЖИД}, \text{кнопка}) = \text{ВЫБОР}$</p>
+            <p>$\delta(\text{ВЫБОР}, \text{выбрал}) = \text{ПРИГОТ}$</p>
+            <p>$\delta(\text{ВЫБОР}, \text{таймаут}) = \text{ОЖИД}$</p>
+            <p style="font-size:.9em;color:var(--text2);margin-top:8px">Каждая строчка — это одна стрелка на графе или одна строка в таблице. Три способа записать одно и то же.</p>
+        </div>
+
+        <!-- ============ МУРА И МИЛИ ============ -->
+        <h2>Два типа автоматов: Мура и Мили</h2>
+
+        <p>До сих пор мы говорили только о переходах: из какого состояния в какое. Но автомат управляет чем-то — он должен ещё и <strong>выдавать команды</strong>: включить мотор, зажечь лампочку, подать сигнал. Вопрос: когда именно он это делает?</p>
+
+        <p>Есть два подхода, и разница между ними принципиальна.</p>
+
+        <h3>Автомат Мура: выход зависит от состояния</h3>
+
+        <div class="card">
+            <p>В автомате Мура каждому <strong>состоянию</strong> сопоставлено действие. Пока система в этом состоянии — действие выполняется. Перешли в другое — действие меняется.</p>
+            <p style="margin-top:10px"><strong>Аналогия:</strong> комнаты в доме. В каждой комнате свой свет. Вошёл в кухню — горит яркий свет. Перешёл в спальню — горит тусклый. Свет определяется <em>комнатой</em>, а не тем, откуда ты пришёл.</p>
+            <p style="margin-top:10px"><strong>Пример с кофемашиной:</strong></p>
+            <ul>
+                <li>Состояние ОЖИДАНИЕ → на экране «Нажмите кнопку» (всегда, пока мы тут)</li>
+                <li>Состояние ПРИГОТОВЛЕНИЕ → мотор кофемолки включён (всегда, пока мы тут)</li>
+                <li>Состояние ОШИБКА → красная лампочка горит (всегда, пока мы тут)</li>
+            </ul>
+            <p style="margin-top:10px;font-size:.9em;color:var(--text2)">Формально: добавляется функция выхода $\lambda: Q \rightarrow \Gamma$, где $\Gamma$ — множество выходных сигналов.</p>
+        </div>
+
+        <h3>Автомат Мили: выход зависит от перехода</h3>
+
+        <div class="card">
+            <p>В автомате Мили действие привязано не к состоянию, а к <strong>переходу</strong>. Одно и то же действие может выполняться при входе в состояние из одного места, но не из другого.</p>
+            <p style="margin-top:10px"><strong>Аналогия:</strong> дверь. Звуковой сигнал раздаётся не «пока ты в комнате», а <em>в момент, когда ты открываешь дверь</em>. Причём разные двери звучат по-разному.</p>
+            <p style="margin-top:10px"><strong>Пример с кофемашиной:</strong></p>
+            <ul>
+                <li>Переход ПРИГОТОВЛЕНИЕ →(приготовлено)→ ГОТОВО: <strong>подать звуковой сигнал «бип»</strong></li>
+                <li>Переход ОШИБКА →(сброс)→ ОЖИДАНИЕ: <strong>запустить самодиагностику</strong></li>
+            </ul>
+            <p style="margin-top:8px;font-size:.9em;color:var(--text2)">Звук раздаётся не «пока система в ГОТОВО», а один раз — в момент перехода. Формально: $\lambda: Q \times \Sigma \rightarrow \Gamma$.</p>
+        </div>
+
+        <h3>Какой выбрать?</h3>
+
+        <div class="card highlight">
+            <p>На практике разница вот в чём:</p>
+            <ul>
+                <li><strong>Мура</strong> проще реализовать: каждому состоянию соответствует набор выходов, и они стабильны. Вошли в состояние — выставили выходы — забыли до следующего перехода. Большинство ПЛК работают по Муру.</li>
+                <li><strong>Мили</strong> компактнее: часто удаётся описать то же поведение меньшим числом состояний, потому что действие зависит ещё и от входа. Но реализация чуть хитрее — нужно отслеживать моменты переходов.</li>
+            </ul>
+            <p style="margin-top:10px">Математически они <strong>эквивалентны</strong>: любой автомат Мили можно переписать как автомат Мура и наоборот. Мура при этом может потребовать больше состояний (в худшем случае в $|\Gamma|$ раз больше), но поведение будет тем же.</p>
+        </div>
+
+        <!-- ============ ДЕТЕРМИНИЗМ ============ -->
+        <h2>Детерминированный и недетерминированный</h2>
+
+        <p>Есть ещё одно важное деление. До сих пор мы считали, что для каждой пары (состояние, событие) существует <strong>ровно один</strong> переход. Это <strong>детерминированный</strong> автомат (ДКА, или DFA по-английски): одинаковый вход всегда приводит к одинаковому результату. Никакого «может быть так, а может — эдак».</p>
+
+        <p>Но бывает и <strong>недетерминированный</strong> автомат (НКА, NFA): из одного состояния по одному событию можно перейти в <em>несколько</em> разных состояний. Система как бы «выбирает» путь.</p>
+
+        <div class="card">
+            <p><strong>Зачем нужен НКА, если он неоднозначный?</strong></p>
+            <p>Для моделирования! НКА часто проще и нагляднее описывает поведение. «При получении пакета система может либо обработать его, либо положить в буфер» — записать это как НКА естественно, а как ДКА — придётся вводить дополнительные состояния.</p>
+            <p style="margin-top:10px"><strong>Хорошая новость:</strong> любой НКА можно <em>автоматически</em> преобразовать в эквивалентный ДКА. Плохая новость: число состояний при этом может вырасти экспоненциально. НКА с 5 состояниями может превратиться в ДКА с 32 состояниями. Но это делает компьютер, а не ты.</p>
+        </div>
+
+        <p>Для систем управления почти всегда используют <strong>детерминированные</strong> автоматы: поведение робота должно быть предсказуемым, а не «ну, может повезёт». НКА — это инструмент для моделирования и анализа на бумаге.</p>
+
+        <!-- ============ КОД ============ -->
+        <h2>Как это ложится в код</h2>
+
+        <p>Конечный автомат — это единственный из формализмов, который <strong>напрямую</strong> превращается в код. Без библиотек, без движков. Вот три способа, от простого к элегантному.</p>
+
+        <h3>Способ 1: if-else / switch-case</h3>
+
+        <p>Самый прямолинейный. Состояние — переменная, переходы — ветвления:</p>
+
+        <pre><code>state = "ОЖИДАНИЕ"
+
+def handle(event):
+    global state
+
+    # Глобальный переход — из любого состояния
+    if event == "неисправность":
+        всё_выключить()
+        state = "ОШИБКА"
+        return
+
+    if state == "ОЖИДАНИЕ":
+        if event == "кнопка_старт":
+            показать_меню()
+            state = "ВЫБОР_НАПИТКА"
+
+    elif state == "ВЫБОР_НАПИТКА":
+        if event == "выбран_напиток":
+            начать_варить()
+            state = "ПРИГОТОВЛЕНИЕ"
+        elif event == "таймаут":
+            погасить_экран()
+            state = "ОЖИДАНИЕ"
+
+    elif state == "ПРИГОТОВЛЕНИЕ":
+        if event == "приготовлено":
+            подать_сигнал()
+            state = "ГОТОВО"
+
+    elif state == "ГОТОВО":
+        if event == "стакан_забран" or event == "таймаут":
+            state = "ОЖИДАНИЕ"
+
+    elif state == "ОШИБКА":
+        if event == "сброс":
+            самодиагностика()
+            state = "ОЖИДАНИЕ"</code></pre>
+
+        <p>Просто, понятно, работает. Для 5 состояний — отлично. Для 50 — превращается в кашу.</p>
+
+        <h3>Способ 2: таблица переходов</h3>
+
+        <p>Идея: вместо if-else — словарь, в котором лежат все переходы. Это та же таблица, что мы рисовали, только в коде:</p>
+
+        <pre><code>transitions = {
+    ("ОЖИДАНИЕ",      "кнопка_старт"):  ("ВЫБОР_НАПИТКА",  показать_меню),
+    ("ВЫБОР_НАПИТКА", "выбран_напиток"): ("ПРИГОТОВЛЕНИЕ",  начать_варить),
+    ("ВЫБОР_НАПИТКА", "таймаут"):        ("ОЖИДАНИЕ",       погасить_экран),
+    ("ПРИГОТОВЛЕНИЕ",  "приготовлено"):   ("ГОТОВО",         подать_сигнал),
+    ("ГОТОВО",         "стакан_забран"):  ("ОЖИДАНИЕ",       None),
+    ("ГОТОВО",         "таймаут"):        ("ОЖИДАНИЕ",       None),
+    ("ОШИБКА",         "сброс"):         ("ОЖИДАНИЕ",       самодиагностика),
+}
+
+state = "ОЖИДАНИЕ"
+
+def handle(event):
+    global state
+    if event == "неисправность":
+        всё_выключить()
+        state = "ОШИБКА"
+        return
+
+    key = (state, event)
+    if key in transitions:
+        new_state, action = transitions[key]
+        if action:
+            action()
+        state = new_state</code></pre>
+
+        <p>Чем это лучше? Таблицу можно загрузить из файла, визуализировать, проверить на полноту («для каждого состояния и каждого события есть строка?»). Данные отделены от логики.</p>
+
+        <!-- ============ ГДЕ FSM ЛОМАЕТСЯ ============ -->
+        <h2>Где конечный автомат ломается</h2>
+
+        <p>FSM — мощный инструмент, но у него есть фундаментальные ограничения. Понимать их важно — именно они мотивируют все остальные формализмы.</p>
+
+        <h3>Проблема 1: взрыв состояний при параллелизме</h3>
+
+        <div class="card warn">
+            <p>Допустим, у тебя два независимых процесса. Первый — управление мотором (3 состояния: выключен, вперёд, назад). Второй — управление подсветкой (2 состояния: горит, не горит). Оба работают параллельно.</p>
+            <p style="margin-top:10px">FSM не умеет «быть в двух состояниях одновременно». Поэтому приходится перечислять <strong>все комбинации</strong>:</p>
+            <ul>
+                <li>(выключен, не горит), (выключен, горит)</li>
+                <li>(вперёд, не горит), (вперёд, горит)</li>
+                <li>(назад, не горит), (назад, горит)</li>
+            </ul>
+            <p style="margin-top:10px">3 × 2 = 6 состояний. Терпимо. А теперь представь систему из 10 компонент, каждая с 4 состояниями: $4^{10} = 1\,048\,576$ состояний. <strong>Миллион</strong>. FSM не справляется.</p>
+        </div>
+
+        <h3>Проблема 2: нет понятия ресурсов</h3>
+
+        <div class="card warn">
+            <p>FSM не умеет считать. У него нет счётчиков, стеков, буферов. Он не может выразить «в очереди 3 задачи» — для этого нужно отдельное состояние для каждого возможного числа задач: «очередь_0», «очередь_1», «очередь_2», ... «очередь_100». Это снова взрыв.</p>
+        </div>
+
+        <h3>Проблема 3: нет иерархии</h3>
+
+        <div class="card warn">
+            <p>Все состояния «плоские» — на одном уровне. Нельзя сказать «внутри состояния РАБОТА есть подрежимы НАГРЕВ и СТАБИЛИЗАЦИЯ». Из-за этого граф с 30+ состояниями становится нечитаемым — паутина стрелок, в которой никто не разберётся.</p>
+        </div>
+
+        <div class="card highlight">
+            <p><strong>Итого:</strong> FSM идеален для систем с небольшим числом последовательных состояний (до 15-20). Для параллелизма нужны <strong>сети Петри</strong> (глава 2). Для иерархии — <strong>Statecharts</strong> (глава 3). Для поведения роботов — <strong>деревья поведения</strong> (глава 5).</p>
+            <p style="margin-top:8px">Но FSM — это фундамент. Все остальные формализмы — это по сути расширения идеи конечного автомата, решающие его конкретные ограничения.</p>
+        </div>
+
+        <!-- ============ ИТОГО ============ -->
+        <h2>Что запомнить</h2>
+
+        <div class="card success">
+            <ul>
+                <li>Конечный автомат = конечный набор состояний + события + правила переходов</li>
+                <li>Три представления: граф, таблица, математическая запись $(Q, \Sigma, \delta, q_0, F)$</li>
+                <li>Мура — выход зависит от состояния (проще). Мили — от перехода (компактнее)</li>
+                <li>Детерминированный — один выход на пару (состояние, событие). Для управления — почти всегда он</li>
+                <li>Ложится в код напрямую: switch-case или таблица</li>
+                <li>Ломается на параллелизме, ресурсах и иерархии — для этого нужны другие инструменты</li>
+            </ul>
+        </div>
+
+        <h2>Дальше</h2>
+
+        <div class="card success">
+            <p>Переходи к <a href="2-petri-nets.html" style="color:var(--green);font-weight:600">главе 2: Сети Петри</a> — узнаем, как моделировать системы, где несколько процессов работают одновременно и делят общие ресурсы.</p>
+        </div>
+    </div>
+</body>
+</html>
