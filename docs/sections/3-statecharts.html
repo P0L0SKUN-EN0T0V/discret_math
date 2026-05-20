@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3. Statecharts — наводим порядок в хаосе</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+    <style>
+        :root{--bg:#0f1117;--card:#1a1d2e;--border:#2a2d3e;--accent:#6c9eff;--accent2:#a78bfa;--green:#4ade80;--orange:#fb923c;--red:#f87171;--text:#e2e8f0;--text2:#94a3b8;--sidebar:#151825}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.8;display:flex;min-height:100vh}
+        .sidebar{width:260px;background:var(--sidebar);border-right:1px solid var(--border);padding:20px 0;position:fixed;height:100vh;overflow-y:auto}
+        .sidebar::-webkit-scrollbar{width:6px}
+        .sidebar::-webkit-scrollbar-track{background:var(--sidebar)}
+        .sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        .sidebar{scrollbar-width:thin;scrollbar-color:var(--border) var(--sidebar)}
+        .sidebar h3{color:var(--accent);padding:0 20px;margin-bottom:16px;font-size:1em}
+        .sidebar a{display:block;padding:8px 20px;color:var(--text2);text-decoration:none;font-size:.9em;border-left:3px solid transparent;transition:all .2s}
+        .sidebar a:hover{background:rgba(108,158,255,.08);color:var(--text)}
+        .sidebar a.active{border-left-color:var(--accent);color:var(--accent);background:rgba(108,158,255,.1)}
+        .sidebar .sep{height:1px;background:var(--border);margin:12px 20px}
+        .sidebar .section-title{color:var(--text2);font-size:.75em;text-transform:uppercase;letter-spacing:1px;padding:12px 20px 4px;font-weight:600}
+        .main{margin-left:260px;padding:48px 40px;max-width:920px;width:100%}
+        h1{font-size:2.1em;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+        .subtitle{color:var(--text2);margin-bottom:36px;font-size:1.05em}
+        h2{font-size:1.4em;color:var(--accent);margin:44px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        h3{font-size:1.1em;color:var(--accent2);margin:28px 0 12px}
+        p{margin:10px 0}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin:16px 0}
+        .card.highlight{border-left:4px solid var(--accent)}
+        .card.warn{border-left:4px solid var(--orange)}
+        .card.success{border-left:4px solid var(--green)}
+        .card.danger{border-left:4px solid var(--red)}
+        ul,ol{padding-left:24px;margin:10px 0}li{margin:8px 0}
+        code{background:rgba(108,158,255,.1);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:.9em}
+        pre{background:#141620;border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:.85em;margin:14px 0;line-height:1.6}
+        table{width:100%;border-collapse:collapse;margin:12px 0}
+        th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+        th{color:var(--accent);font-weight:600}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .schema{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:32px 24px;margin:20px 0;text-align:center}
+        .sc-box{border:2px solid;border-radius:10px;padding:14px;text-align:left;margin:6px}
+        .sc-box .sc-box{margin:6px 4px}
+        @media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:24px 16px}}
+        @media(max-width:700px){.grid{grid-template-columns:1fr}}
+        @media print{body{display:block}.sidebar{display:none}.main{margin-left:0}body{background:#fff;color:#1a1a1a}.card{background:#f9f9f9;border-color:#ddd}h1{-webkit-text-fill-color:#2563eb}h2{color:#2563eb}h3{color:#7c3aed}code{background:#f0f0f0;color:#2563eb}pre{background:#f5f5f5;border-color:#ddd}}
+    </style>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar"></nav>
+    <script src="../nav.js"></script>
+
+    <div class="main">
+        <h1>Statecharts — наводим порядок в хаосе</h1>
+        <p class="subtitle">Иерархические автоматы Давида Харела — FSM, который не превращается в спагетти</p>
+
+        <!-- ============ ПРОБЛЕМА ============ -->
+        <h2>В чём проблема</h2>
+
+        <p>Сети Петри решили проблему параллелизма. Но осталась другая боль: когда состояний много, граф FSM превращается в нечитаемую паутину стрелок.</p>
+
+        <p>Представь бортовой компьютер автомобиля. Вот лишь часть его режимов:</p>
+
+        <div class="card warn">
+            <ul>
+                <li>Двигатель: выключен → запуск → прогрев → холостой ход → под нагрузкой</li>
+                <li>Коробка: паркинг → задний → нейтраль → драйв → спорт</li>
+                <li>Климат: выключен → обогрев → охлаждение → авто</li>
+                <li>Фары: выключены → габариты → ближний → дальний → авто</li>
+                <li>Мультимедиа: радио → USB → Bluetooth → навигация</li>
+            </ul>
+            <p style="margin-top:10px">Если описывать это обычным FSM, нужно перечислить все комбинации: 5 × 5 × 4 × 5 × 4 = <strong>2000 состояний</strong>. Плюс из каждого — куча переходов. Граф на 2000 узлов никто никогда не нарисует и не прочитает.</p>
+        </div>
+
+        <p>Именно с этой проблемой столкнулся Давид Харел в 1987 году, проектируя авионику для истребителя. Его решение — Statecharts — оказалось настолько удачным, что вошло в стандарт UML и стало основой промышленных инструментов вроде MATLAB Stateflow.</p>
+
+        <!-- ============ ТРИ ИДЕИ ============ -->
+        <h2>Три идеи, которые всё меняют</h2>
+
+        <p>Харел не изобретал что-то принципиально новое. Он взял обычный конечный автомат и добавил три механизма. Каждый из них решает конкретную проблему.</p>
+
+        <!-- ============ ИДЕЯ 1 ============ -->
+        <h3>Идея 1: вложенные состояния (иерархия)</h3>
+
+        <p>В обычном FSM все состояния — на одном уровне, как предметы на столе. В Statecharts состояние может содержать <strong>другие состояния внутри себя</strong>, как папки содержат файлы.</p>
+
+        <div class="card highlight">
+            <p><strong>Аналогия с географией.</strong> Скажи «я в России» — это одно состояние верхнего уровня. Но внутри: «Москва», «Питер», «Новосибирск»... Скажи «я в Москве» — внутри: «дома», «на работе», «в метро». Каждый уровень детализирует предыдущий, но верхний уровень остаётся валидным.</p>
+        </div>
+
+        <p>Зачем это нужно? Вот конкретный выигрыш:</p>
+
+        <div class="schema">
+            <div class="sc-box" style="border-color:var(--accent);max-width:620px;margin:0 auto">
+                <strong style="color:var(--accent)">ДВИГАТЕЛЬ</strong>
+                <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+                    <div class="sc-box" style="border-color:var(--green);flex:1;min-width:100px">
+                        <strong style="color:var(--green);font-size:.85em">ВЫКЛЮЧЕН</strong>
+                    </div>
+                    <div class="sc-box" style="border-color:var(--orange);flex:2;min-width:200px">
+                        <strong style="color:var(--orange);font-size:.85em">РАБОТАЕТ</strong>
+                        <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+                            <div class="sc-box" style="border-color:var(--accent2);flex:1;padding:8px;min-width:80px">
+                                <span style="font-size:.8em;color:var(--accent2)">ПРОГРЕВ</span>
+                            </div>
+                            <div class="sc-box" style="border-color:var(--accent2);flex:1;padding:8px;min-width:80px">
+                                <span style="font-size:.8em;color:var(--accent2)">ХОЛОСТОЙ</span>
+                            </div>
+                            <div class="sc-box" style="border-color:var(--accent2);flex:1;padding:8px;min-width:80px">
+                                <span style="font-size:.8em;color:var(--accent2)">НАГРУЗКА</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p>Теперь представь: нужно добавить переход «авария» — из <em>любого</em> рабочего подрежима двигатель должен выключиться. В обычном FSM пришлось бы рисовать три стрелки: из ПРОГРЕВ → ВЫКЛЮЧЕН, из ХОЛОСТОЙ → ВЫКЛЮЧЕН, из НАГРУЗКА → ВЫКЛЮЧЕН. В Statecharts — <strong>одна стрелка</strong> из РАБОТАЕТ → ВЫКЛЮЧЕН. Она автоматически действует из любого подсостояния.</p>
+
+        <div class="card success">
+            <p><strong>Правило:</strong> переход из родительского состояния действует из всех его потомков. Это избавляет от дублирования стрелок — вместо N переходов рисуешь один.</p>
+        </div>
+
+        <p>А при входе в составное состояние система попадает в его <strong>начальное подсостояние</strong> (помечается точкой). Вошли в РАБОТАЕТ — автоматически оказались в ПРОГРЕВ.</p>
+
+        <!-- ============ ИДЕЯ 2 ============ -->
+        <h3>Идея 2: параллельные регионы (ортогональность)</h3>
+
+        <p>Вторая проблема FSM — параллелизм. Двигатель и коробка работают одновременно и независимо. В FSM: 5 × 5 = 25 комбинаций. В Statecharts: просто рисуешь два региона рядом.</p>
+
+        <div class="schema">
+            <div class="sc-box" style="border-color:var(--accent);max-width:620px;margin:0 auto">
+                <strong style="color:var(--accent)">АВТОМОБИЛЬ</strong>
+                <div style="display:flex;gap:0;margin-top:10px">
+                    <div style="flex:1;border-right:2px dashed var(--border);padding-right:12px">
+                        <div style="font-size:.7em;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Двигатель</div>
+                        <div class="sc-box" style="border-color:var(--green);padding:6px"><span style="font-size:.8em">Выключен</span></div>
+                        <div class="sc-box" style="border-color:var(--orange);padding:6px"><span style="font-size:.8em">Работает</span></div>
+                    </div>
+                    <div style="flex:1;padding-left:12px;border-right:2px dashed var(--border);padding-right:12px">
+                        <div style="font-size:.7em;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Коробка</div>
+                        <div class="sc-box" style="border-color:var(--green);padding:6px"><span style="font-size:.8em">P</span></div>
+                        <div class="sc-box" style="border-color:var(--accent2);padding:6px"><span style="font-size:.8em">D</span></div>
+                        <div class="sc-box" style="border-color:var(--accent2);padding:6px"><span style="font-size:.8em">R</span></div>
+                    </div>
+                    <div style="flex:1;padding-left:12px">
+                        <div style="font-size:.7em;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Климат</div>
+                        <div class="sc-box" style="border-color:var(--green);padding:6px"><span style="font-size:.8em">Выкл</span></div>
+                        <div class="sc-box" style="border-color:var(--orange);padding:6px"><span style="font-size:.8em">Обогрев</span></div>
+                        <div class="sc-box" style="border-color:var(--accent2);padding:6px"><span style="font-size:.8em">Охлажд.</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p>Пунктирная линия — это граница между <strong>параллельными регионами</strong>. Система одновременно находится в одном подсостоянии <em>каждого</em> региона. Например: (Работает, D, Обогрев) — двигатель работает, коробка на драйве, климат греет.</p>
+
+        <div class="card highlight">
+            <p><strong>Сколько экономим?</strong> Три региона с 2, 3 и 3 состояниями.</p>
+            <ul>
+                <li>Обычный FSM: 2 × 3 × 3 = <strong>18 состояний</strong></li>
+                <li>Statecharts: 2 + 3 + 3 = <strong>8 состояний</strong></li>
+            </ul>
+            <p>При 10 регионах по 4 состояния: FSM = 4¹⁰ = 1 048 576. Statecharts = 40. Разница в <strong>26 тысяч раз</strong>.</p>
+        </div>
+
+        <p>Регионы могут общаться друг с другом через <strong>события</strong>. Например: если двигатель перешёл в «Выключен», он отправляет событие <code>двигатель_стоп</code>, и коробка автоматически переходит в P. Это межрегиональная координация без перечисления всех комбинаций.</p>
+
+        <!-- ============ ИДЕЯ 3 ============ -->
+        <h3>Идея 3: история</h3>
+
+        <p>Третий механизм решает вот какую задачу. Допустим, двигатель работал в режиме НАГРУЗКА, произошла кратковременная ошибка, система перешла в аварийный режим, через секунду ошибка ушла. Куда возвращаться?</p>
+
+        <p>В обычном FSM — в начальное подсостояние (ПРОГРЕВ). Но это глупо — двигатель уже прогрет, зачем прогревать снова?</p>
+
+        <div class="card highlight">
+            <p>В Statecharts есть специальные псевдосостояния <strong>«история»</strong>:</p>
+            <ul>
+                <li><strong>H</strong> (shallow history) — при повторном входе в составное состояние возвращаемся в то подсостояние <em>верхнего уровня</em>, в котором были при выходе</li>
+                <li><strong>H*</strong> (deep history) — возвращаемся точно в то подсостояние <em>любого уровня вложенности</em>, где были</li>
+            </ul>
+            <p style="margin-top:10px">В нашем примере: переход «из АВАРИИ в РАБОТАЕТ.H*» вернёт систему ровно в НАГРУЗКА — туда, где были до аварии.</p>
+        </div>
+
+        <p>Без истории пришлось бы заводить отдельную переменную «последний подрежим» и проверять её вручную. История делает это автоматически и элегантно.</p>
+
+        <!-- ============ ЖИВОЙ ПРИМЕР ============ -->
+        <h2>Живой пример: бортовая система робота</h2>
+
+        <p>Давай построим Statechart для системы управления мобильным роботом. У робота две подсистемы, работающие параллельно: <strong>движение</strong> и <strong>датчики</strong>.</p>
+
+        <div class="schema">
+            <div class="sc-box" style="border-color:var(--accent);max-width:700px;margin:0 auto">
+                <strong style="color:var(--accent);font-size:1.1em">РОБОТ</strong>
+                <div style="display:flex;gap:0;margin-top:12px">
+                    <div style="flex:3;border-right:2px dashed var(--border);padding-right:14px">
+                        <div style="font-size:.7em;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Движение</div>
+                        <div class="sc-box" style="border-color:var(--green);padding:8px">
+                            <strong style="color:var(--green);font-size:.85em">СТОП</strong><br>
+                            <span style="font-size:.75em;color:var(--text2)">entry/ моторы_стоп()</span>
+                        </div>
+                        <div class="sc-box" style="border-color:var(--orange);padding:8px">
+                            <strong style="color:var(--orange);font-size:.85em">ДВИЖЕНИЕ</strong>
+                            <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">
+                                <div class="sc-box" style="border-color:var(--accent2);flex:1;padding:6px;min-width:70px">
+                                    <span style="font-size:.75em;color:var(--accent2)">ПРЯМО</span>
+                                </div>
+                                <div class="sc-box" style="border-color:var(--accent2);flex:1;padding:6px;min-width:70px">
+                                    <span style="font-size:.75em;color:var(--accent2)">ПОВОРОТ</span>
+                                </div>
+                                <div class="sc-box" style="border-color:var(--accent2);flex:1;padding:6px;min-width:70px">
+                                    <span style="font-size:.75em;color:var(--accent2)">ОБХОД</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sc-box" style="border-color:var(--red);padding:8px">
+                            <strong style="color:var(--red);font-size:.85em">АВАРИЯ</strong><br>
+                            <span style="font-size:.75em;color:var(--text2)">entry/ аварийный_стоп()</span>
+                        </div>
+                    </div>
+                    <div style="flex:2;padding-left:14px">
+                        <div style="font-size:.7em;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Датчики</div>
+                        <div class="sc-box" style="border-color:var(--green);padding:8px">
+                            <strong style="color:var(--green);font-size:.85em">СКАНИРОВАНИЕ</strong><br>
+                            <span style="font-size:.75em;color:var(--text2)">do/ опрос_лидара()</span>
+                        </div>
+                        <div class="sc-box" style="border-color:var(--orange);padding:8px">
+                            <strong style="color:var(--orange);font-size:.85em">КАЛИБРОВКА</strong><br>
+                            <span style="font-size:.75em;color:var(--text2)">entry/ калибровать_IMU()</span>
+                        </div>
+                        <div class="sc-box" style="border-color:var(--red);padding:8px">
+                            <strong style="color:var(--red);font-size:.85em">ОТКАЗ</strong><br>
+                            <span style="font-size:.75em;color:var(--text2)">entry/ отправить_алерт()</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p>Что тут происходит:</p>
+
+        <div class="card">
+            <ul>
+                <li>Два <strong>параллельных региона</strong>: движение и датчики работают одновременно</li>
+                <li>В регионе «Движение» состояние ДВИЖЕНИЕ — <strong>составное</strong>. Внутри него три подрежима: ПРЯМО, ПОВОРОТ, ОБХОД. Начальный — ПРЯМО</li>
+                <li>Переход <code>препятствие</code> из ДВИЖЕНИЕ → АВАРИЯ — действует из любого подрежима (не нужно три стрелки)</li>
+                <li>Переход <code>сброс_аварии</code> из АВАРИЯ → ДВИЖЕНИЕ.<strong>H*</strong> — возвращает ровно в тот подрежим, где были до аварии (например, в ОБХОД)</li>
+                <li><strong>Межрегиональная связь:</strong> если датчики перешли в ОТКАЗ, они отправляют событие <code>датчики_отказ</code> — движение получает его и переходит в СТОП (ехать вслепую нельзя)</li>
+            </ul>
+        </div>
+
+        <p>Сколько тут «реальных» состояний? Движение: СТОП, ПРЯМО, ПОВОРОТ, ОБХОД, АВАРИЯ = 5. Датчики: СКАНИРОВАНИЕ, КАЛИБРОВКА, ОТКАЗ = 3. Как FSM: 5 × 3 = 15 комбинаций. В Statecharts мы видим и оперируем <strong>8 элементами</strong>, а не 15.</p>
+
+        <!-- ============ ДЕЙСТВИЯ ============ -->
+        <h2>Действия: entry, exit, do</h2>
+
+        <p>Ты заметил в примере надписи <code>entry/</code> и <code>do/</code> внутри состояний. Это <strong>действия</strong>, привязанные к состояниям — наследие автоматов Мура, но расширенное.</p>
+
+        <div class="card">
+            <table>
+                <tr><th>Тип</th><th>Когда выполняется</th><th>Пример</th></tr>
+                <tr>
+                    <td><code>entry/</code></td>
+                    <td>Один раз, в момент <strong>входа</strong> в состояние</td>
+                    <td><code>entry/ включить_мотор()</code></td>
+                </tr>
+                <tr>
+                    <td><code>exit/</code></td>
+                    <td>Один раз, в момент <strong>выхода</strong> из состояния</td>
+                    <td><code>exit/ выключить_мотор()</code></td>
+                </tr>
+                <tr>
+                    <td><code>do/</code></td>
+                    <td><strong>Непрерывно</strong>, пока система в состоянии</td>
+                    <td><code>do/ опрос_лидара()</code></td>
+                </tr>
+            </table>
+        </div>
+
+        <p>Зачем три типа? Потому что реальная система часто должна что-то сделать при входе в режим (инициализация), что-то делать постоянно пока в режиме (рабочий цикл), и что-то сделать при выходе (очистка).</p>
+
+        <div class="card">
+            <p><strong>Порядок при переходе из A в B:</strong></p>
+            <ol>
+                <li>Прекращается <code>do/</code> состояния A</li>
+                <li>Выполняется <code>exit/</code> состояния A</li>
+                <li>Выполняется действие, привязанное к самому переходу (если есть)</li>
+                <li>Выполняется <code>entry/</code> состояния B</li>
+                <li>Запускается <code>do/</code> состояния B</li>
+            </ol>
+            <p style="font-size:.9em;color:var(--text2)">При иерархии: exit вызывается от глубокого к поверхностному (сначала выходим из подсостояния, потом из родителя), entry — от поверхностного к глубокому.</p>
+        </div>
+
+        <!-- ============ ПЕРЕХОДЫ С УСЛОВИЯМИ ============ -->
+        <h2>Переходы с условиями и действиями</h2>
+
+        <p>В Statecharts переход записывается в формате:</p>
+
+        <div class="card highlight">
+            <p style="text-align:center;font-size:1.05em;margin:8px 0"><code>событие [условие] / действие</code></p>
+            <ul>
+                <li><strong>Событие</strong> — что произошло (обязательно): <code>кнопка_нажата</code>, <code>таймер_истёк</code></li>
+                <li><strong>[Условие]</strong> — дополнительная проверка (необязательно): <code>[скорость > 0]</code>, <code>[батарея < 20%]</code></li>
+                <li><strong>/ Действие</strong> — что сделать при переходе (необязательно): <code>/ подать_сигнал()</code></li>
+            </ul>
+            <p style="margin-top:10px;font-size:.9em;color:var(--text2)">Пример: <code>кнопка [двигатель_прогрет] / включить_подачу_топлива()</code> — переход по нажатию кнопки, но только если двигатель прогрет, и при переходе включается подача топлива.</p>
+        </div>
+
+        <p>Условие в квадратных скобках называется <strong>guard</strong> (охранное условие). Если событие произошло, но условие ложно — переход не срабатывает. Это позволяет иметь несколько переходов по одному и тому же событию, но с разными условиями — вместо того чтобы заводить дополнительные состояния.</p>
+
+        <!-- ============ ФОРМАЛЬНОЕ ОПРЕДЕЛЕНИЕ ============ -->
+        <h2>Формальная запись</h2>
+
+        <p>Если хочется строго:</p>
+
+        <div class="card">
+            <p>Statechart — это набор:</p>
+            <p style="text-align:center;font-size:1.05em;margin:12px 0">$$SC = (S, \rho, \psi, T, s_0)$$</p>
+            <ul>
+                <li>$S$ — множество всех состояний (включая вложенные)</li>
+                <li>$\rho: S \rightarrow S$ — функция <strong>родителя</strong>: кто в кого вложен. $\rho(\text{ПРОГРЕВ}) = \text{РАБОТАЕТ}$, $\rho(\text{РАБОТАЕТ}) = \text{ДВИГАТЕЛЬ}$</li>
+                <li>$\psi: S \rightarrow \{\text{OR}, \text{AND}, \text{BASIC}\}$ — <strong>тип</strong> состояния:
+                    <ul>
+                        <li><strong>OR</strong> — составное, ровно одно подсостояние активно (обычная вложенность)</li>
+                        <li><strong>AND</strong> — параллельное, все подсостояния активны одновременно (регионы)</li>
+                        <li><strong>BASIC</strong> — лист, не содержит подсостояний</li>
+                    </ul>
+                </li>
+                <li>$T$ — множество переходов, каждый с событием, условием и действием</li>
+                <li>$s_0$ — начальная конфигурация (какие состояния активны при старте)</li>
+            </ul>
+        </div>
+
+        <!-- ============ СРАВНЕНИЕ ============ -->
+        <h2>Что дают Statecharts по сравнению с FSM</h2>
+
+        <div class="card">
+            <table>
+                <tr><th>Проблема FSM</th><th>Решение в Statecharts</th></tr>
+                <tr>
+                    <td>2000 состояний для автомобиля (все комбинации)</td>
+                    <td>Параллельные регионы: сумма вместо произведения</td>
+                </tr>
+                <tr>
+                    <td>20 стрелок «авария» из каждого подсостояния</td>
+                    <td>Одна стрелка из родительского состояния</td>
+                </tr>
+                <tr>
+                    <td>Нечитаемый граф при 30+ состояниях</td>
+                    <td>Иерархия: верхний уровень простой, детали внутри</td>
+                </tr>
+                <tr>
+                    <td>Потеря контекста при возврате из аварии</td>
+                    <td>Псевдосостояние History — запоминает, где были</td>
+                </tr>
+                <tr>
+                    <td>Нет инициализации/очистки при смене режима</td>
+                    <td>entry/exit/do — жизненный цикл состояния</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="card warn">
+            <p><strong>Важно:</strong> Statecharts <strong>не добавляют вычислительной мощности</strong>. Всё, что можно описать Statechart-ом, можно описать и обычным FSM — просто FSM будет в тысячи раз больше. Statecharts — это инструмент <strong>компактной записи</strong>, а не новая математика.</p>
+            <p style="margin-top:8px">Формально: Statecharts распознают те же <strong>регулярные языки</strong>, что и FSM. Но записать тот же автомат можно экспоненциально короче.</p>
+        </div>
+
+        <!-- ============ ИНСТРУМЕНТЫ ============ -->
+        <h2>Где используются</h2>
+
+        <div class="card">
+            <ul>
+                <li><strong>MATLAB Stateflow</strong> — промышленный стандарт. Автомобилестроение, авиация, медтехника. Рисуешь Statechart — он генерирует C-код для контроллера.</li>
+                <li><strong>UML State Machine</strong> — Statecharts стали частью стандарта UML 2.x. Любой UML-редактор (Enterprise Architect, StarUML, PlantUML) умеет их рисовать.</li>
+                <li><strong>XState</strong> — популярная JavaScript-библиотека. Описываешь автомат в JSON, XState выполняет его и даёт визуализатор. Используется в вебе для сложных UI (формы, онбординг, мультишаговые процессы).</li>
+                <li><strong>YAKINDU / itemis CREATE</strong> — бесплатный для учёбы. Графический редактор + генерация C/C++/Java.</li>
+            </ul>
+        </div>
+
+        <!-- ============ ИТОГО ============ -->
+        <h2>Что запомнить</h2>
+
+        <div class="card success">
+            <ul>
+                <li>Statecharts = FSM + вложенность + параллельные регионы + история</li>
+                <li>Вложенность: переход из родителя действует из всех потомков (одна стрелка вместо N)</li>
+                <li>Регионы: система в нескольких подсостояниях одновременно (сумма вместо произведения)</li>
+                <li>История (H / H*): запоминает, где были при последнем выходе</li>
+                <li>Действия: entry (при входе), exit (при выходе), do (постоянно)</li>
+                <li>Переходы: <code>событие [условие] / действие</code></li>
+                <li>Выразительность та же, что у FSM, но запись экспоненциально компактнее</li>
+            </ul>
+        </div>
+
+        <h2>Дальше</h2>
+
+        <div class="card success">
+            <p>Мы научились описывать логику (FSM), параллелизм (сети Петри) и структурировать сложность (Statecharts). Но ни один из этих инструментов не отвечает на вопрос «сколько времени это займёт?». В <a href="4-time.html" style="color:var(--green);font-weight:600">главе 4: Время в моделях</a> добавим часы и научимся считать производительность.</p>
+        </div>
+    </div>
+</body>
+</html>
