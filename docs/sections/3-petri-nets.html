@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3. Сети Петри</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+    <style>
+        :root{--bg:#0f1117;--card:#1a1d2e;--border:#2a2d3e;--accent:#6c9eff;--accent2:#a78bfa;--green:#4ade80;--orange:#fb923c;--red:#f87171;--text:#e2e8f0;--text2:#94a3b8;--sidebar:#151825}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.8;display:flex;min-height:100vh}
+        .sidebar{width:260px;background:var(--sidebar);border-right:1px solid var(--border);padding:20px 0;position:fixed;height:100vh;overflow-y:auto}
+        .sidebar::-webkit-scrollbar{width:6px}
+        .sidebar::-webkit-scrollbar-track{background:var(--sidebar)}
+        .sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        .sidebar{scrollbar-width:thin;scrollbar-color:var(--border) var(--sidebar)}
+        .sidebar h3{color:var(--accent);padding:0 20px;margin-bottom:16px;font-size:1em}
+        .sidebar a{display:block;padding:8px 20px;color:var(--text2);text-decoration:none;font-size:.9em;border-left:3px solid transparent;transition:all .2s}
+        .sidebar a:hover{background:rgba(108,158,255,.08);color:var(--text)}
+        .sidebar a.active{border-left-color:var(--accent);color:var(--accent);background:rgba(108,158,255,.1)}
+        .sidebar .sep{height:1px;background:var(--border);margin:12px 20px}
+        .sidebar .section-title{color:var(--text2);font-size:.75em;text-transform:uppercase;letter-spacing:1px;padding:12px 20px 4px;font-weight:600}
+        .main{margin-left:260px;padding:48px 40px;max-width:920px;width:100%}
+        h1{font-size:2.1em;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+        .subtitle{color:var(--text2);margin-bottom:36px;font-size:1.05em}
+        h2{font-size:1.4em;color:var(--accent);margin:44px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        h3{font-size:1.1em;color:var(--accent2);margin:28px 0 12px}
+        p{margin:10px 0}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin:16px 0}
+        .card.highlight{border-left:4px solid var(--accent)}
+        .card.warn{border-left:4px solid var(--orange)}
+        .card.success{border-left:4px solid var(--green)}
+        .tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.8em;font-weight:600;margin:2px 4px 2px 0}
+        .tag.blue{background:rgba(108,158,255,.15);color:var(--accent)}
+        .tag.green{background:rgba(74,222,128,.15);color:var(--green)}
+        .tag.orange{background:rgba(251,146,60,.15);color:var(--orange)}
+        .tag.purple{background:rgba(167,139,250,.15);color:var(--accent2)}
+        ul,ol{padding-left:24px;margin:10px 0}li{margin:8px 0}
+        code{background:rgba(108,158,255,.1);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:.9em}
+        pre{background:#141620;border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:.85em;margin:14px 0;line-height:1.6}
+        table{width:100%;border-collapse:collapse;margin:12px 0}
+        th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+        th{color:var(--accent);font-weight:600}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .schema{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:32px 24px;margin:20px 0;text-align:center}
+        .num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:rgba(108,158,255,.15);color:var(--accent);font-weight:700;font-size:.85em;margin-right:8px}
+        .pn-place{display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--accent);border-radius:50%;width:50px;height:50px;font-size:.8em;font-weight:600;position:relative}
+        .pn-trans{display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--orange);width:12px;height:44px;background:var(--orange);font-size:.7em}
+        .pn-token{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--green)}
+        @media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:24px 16px}}
+        @media(max-width:700px){.grid{grid-template-columns:1fr}}
+        @media print{body{display:block}.sidebar{display:none}.main{margin-left:0}body{background:#fff;color:#1a1a1a}.card{background:#f9f9f9;border-color:#ddd}h1{-webkit-text-fill-color:#2563eb}h2{color:#2563eb}h3{color:#7c3aed}code{background:#f0f0f0;color:#2563eb}pre{background:#f5f5f5;border-color:#ddd}}
+    </style>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar"></nav>
+    <script src="../nav.js"></script>
+
+    <div class="main">
+        <h1>Сети Петри</h1>
+        <p class="subtitle">Petri Nets — формализм для параллельных, распределённых и ресурсных систем</p>
+
+        <!-- ============ ИНТУИЦИЯ ============ -->
+        <h2>Интуиция</h2>
+
+        <p>Сеть Петри — это граф из двух типов узлов: <strong>места</strong> (кружки) и <strong>переходы</strong> (палочки). По местам «текут» <strong>токены</strong> (фишки). Переход срабатывает, когда во всех его входных местах есть токены — забирает их оттуда и кладёт в выходные места.</p>
+
+        <div class="card highlight">
+            <p><strong>Аналогия:</strong> представь трубопроводную сеть. Места — это резервуары с жидкостью (токены = литры). Переходы — клапаны. Клапан открывается (срабатывает), только если во всех подводящих резервуарах достаточно жидкости. При открытии жидкость перетекает в следующие резервуары.</p>
+        </div>
+
+        <div class="schema">
+            <p style="margin-bottom:16px;color:var(--text2);font-size:.9em">Простейшая сеть Петри: два места, один переход</p>
+            <div style="display:flex;align-items:center;justify-content:center;gap:24px">
+                <div style="text-align:center">
+                    <div class="pn-place" style="border-color:var(--green)">
+                        <span class="pn-token"></span><span class="pn-token" style="margin-left:2px"></span>
+                    </div>
+                    <div style="font-size:.8em;color:var(--text2);margin-top:6px">$p_1$ (2 токена)</div>
+                </div>
+                <div style="color:var(--text2)">→</div>
+                <div style="text-align:center">
+                    <div class="pn-trans"></div>
+                    <div style="font-size:.8em;color:var(--text2);margin-top:6px">$t_1$</div>
+                </div>
+                <div style="color:var(--text2)">→</div>
+                <div style="text-align:center">
+                    <div class="pn-place">
+                        <span style="font-size:.8em;color:var(--text2)">0</span>
+                    </div>
+                    <div style="font-size:.8em;color:var(--text2);margin-top:6px">$p_2$ (0 токенов)</div>
+                </div>
+            </div>
+            <p style="margin-top:16px;font-size:.85em;color:var(--text2)">$t_1$ <strong>разрешён</strong> (в $p_1$ есть токен). При срабатывании: один токен из $p_1$ перемещается в $p_2$.</p>
+        </div>
+
+        <!-- ============ ОПРЕДЕЛЕНИЕ ============ -->
+        <h2>Формальное определение</h2>
+
+        <div class="card highlight">
+            <p>Сеть Петри — это четвёрка:</p>
+            <p style="font-size:1.2em;text-align:center;margin:16px 0">$$N = (P, T, F, W)$$</p>
+            <table>
+                <tr><td>$P$</td><td>Конечное множество <strong>мест</strong> (places)</td><td>$\{p_1, p_2, \ldots\}$</td></tr>
+                <tr><td>$T$</td><td>Конечное множество <strong>переходов</strong> (transitions)</td><td>$\{t_1, t_2, \ldots\}$</td></tr>
+                <tr><td>$F$</td><td><strong>Дуги</strong> $F \subseteq (P \times T) \cup (T \times P)$</td><td>Связи между местами и переходами</td></tr>
+                <tr><td>$W$</td><td><strong>Весовая функция</strong> $W: F \rightarrow \mathbb{N}^+$</td><td>Сколько токенов дуга передаёт</td></tr>
+            </table>
+            <p style="margin-top:12px">Плюс <strong>начальная маркировка</strong> $M_0: P \rightarrow \mathbb{N}_0$ — начальное распределение токенов по местам.</p>
+            <p style="margin-top:8px;font-size:.85em;color:var(--text2)">Важно: $P \cap T = \emptyset$ — места и переходы не пересекаются. Дуги идут только между разнотипными узлами (место↔переход), никогда место→место или переход→переход.</p>
+        </div>
+
+        <!-- ============ ПРАВИЛА ============ -->
+        <h2>Правила срабатывания</h2>
+
+        <div class="card">
+            <h3>Шаг 1: Проверка разрешённости</h3>
+            <p>Переход $t$ <strong>разрешён</strong> (enabled) при маркировке $M$, если:</p>
+            <p style="text-align:center;font-size:1.1em;margin:12px 0">$$\forall p \in {}^\bullet t: \quad M(p) \geq W(p, t)$$</p>
+            <p>где ${}^\bullet t$ — множество входных мест перехода $t$. Простыми словами: в каждом входном месте должно быть не меньше токенов, чем вес дуги.</p>
+        </div>
+
+        <div class="card">
+            <h3>Шаг 2: Срабатывание (firing)</h3>
+            <p>При срабатывании $t$ маркировка обновляется:</p>
+            <p style="text-align:center;font-size:1.1em;margin:12px 0">$$M'(p) = M(p) - W(p, t) + W(t, p)$$</p>
+            <p>Из входных мест забираются токены, в выходные — добавляются. Записывается как $M \xrightarrow{t} M'$.</p>
+        </div>
+
+        <div class="card warn">
+            <p><strong>Ключевое отличие от FSM:</strong> если несколько переходов разрешены одновременно — любой из них МОЖЕТ сработать. Порядок не определён. Это и есть <strong>недетерминизм</strong> и <strong>параллелизм</strong> сетей Петри.</p>
+        </div>
+
+        <!-- ============ ПАТТЕРНЫ ============ -->
+        <h2>Базовые паттерны</h2>
+
+        <p>Сети Петри выражают структуры, невозможные в FSM:</p>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Последовательность</h3>
+                <p>$p_1 \rightarrow t_1 \rightarrow p_2 \rightarrow t_2 \rightarrow p_3$</p>
+                <p style="font-size:.85em;color:var(--text2)">Токен проходит по цепочке. Аналог линейного FSM.</p>
+            </div>
+            <div class="card">
+                <h3>Ветвление (choice)</h3>
+                <p>Из одного места $p$ выходят дуги к нескольким переходам $t_1, t_2$. Сработает один из них — выбор недетерминированный.</p>
+                <p style="font-size:.85em;color:var(--text2)">Аналог: if-else, но выбор не предопределён.</p>
+            </div>
+            <div class="card">
+                <h3>Параллелизм (fork)</h3>
+                <p>Один переход $t$ имеет несколько выходных мест. При срабатывании токены появляются во всех выходных местах одновременно.</p>
+                <p style="font-size:.85em;color:var(--text2)">Аналог: запуск двух параллельных потоков.</p>
+            </div>
+            <div class="card">
+                <h3>Синхронизация (join)</h3>
+                <p>Переход $t$ с несколькими входными местами. Сработает только когда во ВСЕХ входах есть токены — ждёт самого медленного.</p>
+                <p style="font-size:.85em;color:var(--text2)">Аналог: barrier, pthread_join, await Promise.all.</p>
+            </div>
+            <div class="card">
+                <h3>Взаимное исключение (mutex)</h3>
+                <p>Место с одним токеном, к которому подключены два перехода. Только один может сработать — второй ждёт, пока токен вернётся.</p>
+                <p style="font-size:.85em;color:var(--text2)">Аналог: мьютекс, семафор с count=1.</p>
+            </div>
+            <div class="card">
+                <h3>Ресурс (resource pool)</h3>
+                <p>Место с $k$ токенами = пул из $k$ ресурсов. Переходы берут и возвращают токены. Если ресурсы кончились — переход ждёт.</p>
+                <p style="font-size:.85em;color:var(--text2)">Аналог: connection pool, пул потоков.</p>
+            </div>
+        </div>
+
+        <!-- ============ ПРИМЕР ============ -->
+        <h2>Пример: два робота, один инструмент</h2>
+
+        <p>Два робота работают параллельно, но используют один общий инструмент (дрель). Инструмент нельзя использовать одновременно.</p>
+
+        <div class="card highlight">
+            <p><strong>Места:</strong></p>
+            <ul>
+                <li>$p_1$ — Робот A ждёт</li>
+                <li>$p_2$ — Робот A работает с инструментом</li>
+                <li>$p_3$ — Робот B ждёт</li>
+                <li>$p_4$ — Робот B работает с инструментом</li>
+                <li>$p_5$ — Инструмент свободен <span class="tag green">1 токен</span></li>
+            </ul>
+            <p style="margin-top:12px"><strong>Переходы:</strong></p>
+            <ul>
+                <li>$t_1$ — Робот A берёт инструмент (входы: $p_1$, $p_5$; выход: $p_2$)</li>
+                <li>$t_2$ — Робот A возвращает инструмент (вход: $p_2$; выходы: $p_1$, $p_5$)</li>
+                <li>$t_3$ — Робот B берёт инструмент (входы: $p_3$, $p_5$; выход: $p_4$)</li>
+                <li>$t_4$ — Робот B возвращает инструмент (вход: $p_4$; выходы: $p_3$, $p_5$)</li>
+            </ul>
+            <p style="margin-top:12px"><strong>Начальная маркировка:</strong> $M_0 = (1, 0, 1, 0, 1)$ — оба робота ждут, инструмент свободен.</p>
+        </div>
+
+        <div class="card">
+            <p><strong>Свойства этой сети:</strong></p>
+            <ul>
+                <li><strong>Взаимное исключение:</strong> $M(p_2) + M(p_4) \leq 1$ — оба робота никогда не работают с инструментом одновременно (инвариант, доказуемый через S-инвариант).</li>
+                <li><strong>Живость:</strong> ни один из переходов не может быть заблокирован навсегда.</li>
+                <li><strong>Ограниченность:</strong> число токенов в каждом месте $\leq 1$ (1-ограниченная = безопасная сеть).</li>
+            </ul>
+        </div>
+
+        <p>Попробуй описать это же FSM — потребуется $(2 \times 2 \times 2) = 8$ состояний (все комбинации «ждёт/работает» двух роботов и «свободен/занят» инструмента). С тремя роботами — уже 16. С десятью — 2048. В сети Петри число мест растёт <strong>линейно</strong>.</p>
+
+        <!-- ============ МАТРИЧНОЕ ПРЕДСТАВЛЕНИЕ ============ -->
+        <h2>Матричное представление</h2>
+
+        <p>Сеть Петри можно описать матрицами — это удобно для компьютерного анализа.</p>
+
+        <div class="card">
+            <h3>Матрица инцидентности</h3>
+            <p>Для сети с $|P|$ местами и $|T|$ переходами:</p>
+            <p style="text-align:center;font-size:1.1em;margin:12px 0">$$C = W^+ - W^-$$</p>
+            <p>где $W^-_{ij} = W(p_i, t_j)$ — вес дуги из места $p_i$ в переход $t_j$ (сколько забирает), а $W^+_{ij} = W(t_j, p_i)$ — вес дуги из перехода $t_j$ в место $p_i$ (сколько кладёт).</p>
+        </div>
+
+        <p>Для примера с двумя роботами:</p>
+
+        <div class="card">
+            <p style="text-align:center;font-size:1.05em">
+            $$W^- = \begin{pmatrix} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \\ 1 & 0 & 1 & 0 \end{pmatrix}, \quad
+            W^+ = \begin{pmatrix} 0 & 1 & 0 & 0 \\ 1 & 0 & 0 & 0 \\ 0 & 0 & 0 & 1 \\ 0 & 0 & 1 & 0 \\ 0 & 1 & 0 & 1 \end{pmatrix}$$
+            </p>
+            <p style="text-align:center;font-size:1.05em;margin-top:12px">
+            $$C = W^+ - W^- = \begin{pmatrix} -1 & 1 & 0 & 0 \\ 1 & -1 & 0 & 0 \\ 0 & 0 & -1 & 1 \\ 0 & 0 & 1 & -1 \\ -1 & 1 & -1 & 1 \end{pmatrix}$$
+            </p>
+            <p style="font-size:.85em;color:var(--text2);margin-top:10px">Строки — места ($p_1 \ldots p_5$), столбцы — переходы ($t_1 \ldots t_4$). Отрицательное число = забирает токены, положительное = добавляет.</p>
+        </div>
+
+        <div class="card">
+            <h3>Уравнение состояния</h3>
+            <p>Новая маркировка после срабатывания последовательности переходов:</p>
+            <p style="text-align:center;font-size:1.1em;margin:12px 0">$$M' = M_0 + C \cdot \vec{u}$$</p>
+            <p>где $\vec{u}$ — вектор срабатываний (Parikh vector): $u_j$ = сколько раз сработал переход $t_j$. Это <strong>необходимое</strong> условие достижимости, но не достаточное (не учитывает порядок).</p>
+        </div>
+
+        <!-- ============ АНАЛИЗ ============ -->
+        <h2>Анализ свойств</h2>
+
+        <div class="card">
+            <h3>Дерево достижимости (Coverability Tree)</h3>
+            <p>Строим дерево всех достижимых маркировок. Корень — $M_0$, дети — маркировки после срабатывания каждого разрешённого перехода.</p>
+            <p style="font-size:.85em;color:var(--text2)">Для ограниченных сетей дерево конечно. Для неограниченных — используется символ $\omega$ (бесконечность) для растущих мест.</p>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>S-инварианты</h3>
+                <p>Вектор $\vec{y} \geq 0$ такой, что $\vec{y}^T \cdot C = 0$. Означает: взвешенная сумма токенов в определённых местах <strong>постоянна</strong> при любом выполнении.</p>
+                <p style="font-size:.85em;color:var(--text2)">В примере: $M(p_1) + M(p_2) = 1$ (робот A всегда либо ждёт, либо работает). $M(p_2) + M(p_4) + M(p_5) = 1$ (инструмент всегда где-то).</p>
+            </div>
+            <div class="card">
+                <h3>T-инварианты</h3>
+                <p>Вектор $\vec{x} \geq 0$ такой, что $C \cdot \vec{x} = 0$. Означает: существует последовательность срабатываний, возвращающая сеть в исходную маркировку (цикл).</p>
+                <p style="font-size:.85em;color:var(--text2)">В примере: $(1,1,0,0)^T$ — робот A берёт и возвращает инструмент = цикл.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Ключевые свойства и как их проверять</h3>
+            <table>
+                <tr><th>Свойство</th><th>Определение</th><th>Метод проверки</th></tr>
+                <tr>
+                    <td><strong>Ограниченность</strong></td>
+                    <td>$\exists k: \forall M \in R(M_0), \forall p: M(p) \leq k$</td>
+                    <td>Дерево покрытия (нет $\omega$)</td>
+                </tr>
+                <tr>
+                    <td><strong>Безопасность</strong></td>
+                    <td>1-ограниченность ($k = 1$)</td>
+                    <td>Дерево покрытия</td>
+                </tr>
+                <tr>
+                    <td><strong>Живость</strong></td>
+                    <td>Любой переход может быть снова разрешён</td>
+                    <td>Граф достижимости + SCC</td>
+                </tr>
+                <tr>
+                    <td><strong>Достижимость</strong></td>
+                    <td>$M \in R(M_0)$?</td>
+                    <td>EXPSPACE-полная задача (!)</td>
+                </tr>
+                <tr>
+                    <td><strong>Отсутствие тупиков</strong></td>
+                    <td>В каждой достижимой маркировке хоть один переход разрешён</td>
+                    <td>Дерево достижимости</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- ============ РАСШИРЕНИЯ ============ -->
+        <h2>Расширения базовой модели</h2>
+
+        <p>Классические сети Петри часто расширяют для практических задач:</p>
+
+        <table>
+            <tr><th>Расширение</th><th>Что добавляет</th><th>Зачем</th></tr>
+            <tr>
+                <td><strong>Цветные сети Петри</strong> (CPN)</td>
+                <td>Токены несут данные (типы, значения)</td>
+                <td>Моделирование протоколов, данных</td>
+            </tr>
+            <tr>
+                <td><strong>Временные</strong> (Time PN)</td>
+                <td>Задержки на переходах / местах</td>
+                <td>Анализ производительности, real-time</td>
+            </tr>
+            <tr>
+                <td><strong>Стохастические</strong> (SPN)</td>
+                <td>Задержки по экспоненциальному распределению</td>
+                <td>Оценка надёжности, пропускной способности</td>
+            </tr>
+            <tr>
+                <td><strong>Иерархические</strong></td>
+                <td>Подсети как «чёрные ящики»</td>
+                <td>Масштабируемость больших моделей</td>
+            </tr>
+            <tr>
+                <td><strong>Ингибиторные дуги</strong></td>
+                <td>Переход разрешён при <em>отсутствии</em> токена</td>
+                <td>Проверка нуля → Тьюринг-полнота</td>
+            </tr>
+        </table>
+
+        <div class="card warn">
+            <p><strong>Важно:</strong> сети Петри с ингибиторными дугами = машина Тьюринга по выразительности. Это значит, что все свойства (достижимость, живость) становятся <strong>неразрешимыми</strong>. Классические сети Петри без ингибиторных дуг строго слабее машины Тьюринга, и многие свойства разрешимы (хотя иногда вычислительно дорого).</p>
+        </div>
+
+        <!-- ============ FSM vs PN ============ -->
+        <h2>Сравнение с FSM</h2>
+
+        <table>
+            <tr><th></th><th>FSM</th><th>Сети Петри</th></tr>
+            <tr><td><strong>Состояние</strong></td><td>Одно из $Q$</td><td>Маркировка $M: P \rightarrow \mathbb{N}$</td></tr>
+            <tr><td><strong>Параллелизм</strong></td><td>Нет (взрыв состояний)</td><td>Естественный (fork/join)</td></tr>
+            <tr><td><strong>Ресурсы</strong></td><td>Нет</td><td>Токены = ресурсы</td></tr>
+            <tr><td><strong>Масштабируемость</strong></td><td>$k^n$ состояний</td><td>Линейный рост</td></tr>
+            <tr><td><strong>Реализация</strong></td><td>Прямая (switch/table)</td><td>Нужен движок или генерация</td></tr>
+            <tr><td><strong>Анализ</strong></td><td>Простой (BFS/DFS)</td><td>Сложнее (EXPSPACE)</td></tr>
+            <tr><td><strong>Выразительность</strong></td><td>Регулярные языки</td><td>Строго больше регулярных</td></tr>
+        </table>
+
+        <!-- ============ ИНСТРУМЕНТЫ ============ -->
+        <h2>Инструменты</h2>
+
+        <div class="grid">
+            <div class="card">
+                <h3>PIPE (Platform Independent Petri net Editor)</h3>
+                <p style="font-size:.9em;color:var(--text2)">Бесплатный, кроссплатформенный. Визуальное редактирование, анализ свойств, дерево достижимости.</p>
+            </div>
+            <div class="card">
+                <h3>CPN Tools</h3>
+                <p style="font-size:.9em;color:var(--text2)">Для цветных сетей Петри. Моделирование с данными, симуляция, верификация.</p>
+            </div>
+            <div class="card">
+                <h3>Snoopy</h3>
+                <p style="font-size:.9em;color:var(--text2)">Для биологического моделирования, но работает с любыми сетями Петри. Симуляция и анализ.</p>
+            </div>
+            <div class="card">
+                <h3>python-snakes</h3>
+                <p style="font-size:.9em;color:var(--text2)">Python-библиотека для программного создания и анализа сетей Петри.</p>
+            </div>
+        </div>
+
+        <!-- ============ ДАЛЬШЕ ============ -->
+        <h2>Дальше</h2>
+
+        <div class="card success">
+            <p>Сети Петри решают проблему параллелизма, но не решают проблему иерархии. Для сложных систем с десятками режимов нужна вложенность. Переходим к <a href="4-statecharts.html" style="color:var(--green);font-weight:600">Statecharts Харела</a> — иерархическим автоматам, ставшим стандартом UML.</p>
+        </div>
+    </div>
+</body>
+</html>

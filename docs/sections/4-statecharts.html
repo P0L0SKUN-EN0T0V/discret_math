@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4. Statecharts (Харел)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+    <style>
+        :root{--bg:#0f1117;--card:#1a1d2e;--border:#2a2d3e;--accent:#6c9eff;--accent2:#a78bfa;--green:#4ade80;--orange:#fb923c;--red:#f87171;--text:#e2e8f0;--text2:#94a3b8;--sidebar:#151825}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.8;display:flex;min-height:100vh}
+        .sidebar{width:260px;background:var(--sidebar);border-right:1px solid var(--border);padding:20px 0;position:fixed;height:100vh;overflow-y:auto}
+        .sidebar::-webkit-scrollbar{width:6px}
+        .sidebar::-webkit-scrollbar-track{background:var(--sidebar)}
+        .sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        .sidebar{scrollbar-width:thin;scrollbar-color:var(--border) var(--sidebar)}
+        .sidebar h3{color:var(--accent);padding:0 20px;margin-bottom:16px;font-size:1em}
+        .sidebar a{display:block;padding:8px 20px;color:var(--text2);text-decoration:none;font-size:.9em;border-left:3px solid transparent;transition:all .2s}
+        .sidebar a:hover{background:rgba(108,158,255,.08);color:var(--text)}
+        .sidebar a.active{border-left-color:var(--accent);color:var(--accent);background:rgba(108,158,255,.1)}
+        .sidebar .sep{height:1px;background:var(--border);margin:12px 20px}
+        .sidebar .section-title{color:var(--text2);font-size:.75em;text-transform:uppercase;letter-spacing:1px;padding:12px 20px 4px;font-weight:600}
+        .main{margin-left:260px;padding:48px 40px;max-width:920px;width:100%}
+        h1{font-size:2.1em;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+        .subtitle{color:var(--text2);margin-bottom:36px;font-size:1.05em}
+        h2{font-size:1.4em;color:var(--accent);margin:44px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        h3{font-size:1.1em;color:var(--accent2);margin:28px 0 12px}
+        p{margin:10px 0}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin:16px 0}
+        .card.highlight{border-left:4px solid var(--accent)}
+        .card.warn{border-left:4px solid var(--orange)}
+        .card.success{border-left:4px solid var(--green)}
+        .tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.8em;font-weight:600;margin:2px 4px 2px 0}
+        .tag.blue{background:rgba(108,158,255,.15);color:var(--accent)}
+        .tag.green{background:rgba(74,222,128,.15);color:var(--green)}
+        .tag.orange{background:rgba(251,146,60,.15);color:var(--orange)}
+        .tag.purple{background:rgba(167,139,250,.15);color:var(--accent2)}
+        ul,ol{padding-left:24px;margin:10px 0}li{margin:8px 0}
+        code{background:rgba(108,158,255,.1);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:.9em}
+        pre{background:#141620;border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:.85em;margin:14px 0;line-height:1.6}
+        table{width:100%;border-collapse:collapse;margin:12px 0}
+        th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+        th{color:var(--accent);font-weight:600}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .schema{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:32px 24px;margin:20px 0;text-align:center}
+        .num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:rgba(108,158,255,.15);color:var(--accent);font-weight:700;font-size:.85em;margin-right:8px}
+        .sc-box{border:2px solid;border-radius:10px;padding:16px;text-align:left;margin:8px}
+        @media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:24px 16px}}
+        @media(max-width:700px){.grid{grid-template-columns:1fr}}
+        @media print{body{display:block}.sidebar{display:none}.main{margin-left:0}body{background:#fff;color:#1a1a1a}.card{background:#f9f9f9;border-color:#ddd}h1{-webkit-text-fill-color:#2563eb}h2{color:#2563eb}h3{color:#7c3aed}code{background:#f0f0f0;color:#2563eb}pre{background:#f5f5f5;border-color:#ddd}}
+    </style>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar"></nav>
+    <script src="../nav.js"></script>
+
+    <div class="main">
+        <h1>Statecharts (Харел)</h1>
+        <p class="subtitle">Иерархические автоматы — FSM на стероидах, стандарт UML State Machine</p>
+
+        <!-- ============ ПРОБЛЕМА ============ -->
+        <h2>Проблема, которую решают</h2>
+
+        <div class="card warn">
+            <p>FSM для реальной системы (например, бортовой компьютер автомобиля) потребует тысячи состояний. Граф станет нечитаемым. Причины:</p>
+            <ol>
+                <li><strong>Нет иерархии</strong> — «двигатель.запущен.прогрев» и «двигатель.запущен.работа» — это разные состояния верхнего уровня</li>
+                <li><strong>Нет параллелизма</strong> — «двигатель × коробка × климат» = декартово произведение</li>
+                <li><strong>Нет истории</strong> — при возврате из подсостояния забывается, где были</li>
+            </ol>
+        </div>
+
+        <p>В 1987 году Давид Харел (David Harel) предложил <strong>Statecharts</strong> — расширение FSM с тремя ключевыми механизмами: <strong>иерархия</strong>, <strong>ортогональные регионы</strong> и <strong>история</strong>.</p>
+
+        <!-- ============ ТРИ МЕХАНИЗМА ============ -->
+        <h2>Три ключевых механизма</h2>
+
+        <h3>1. Иерархия (вложенные состояния)</h3>
+
+        <div class="card highlight">
+            <p>Состояние может содержать <strong>вложенные подсостояния</strong>. Переход во внешнее состояние автоматически переводит в его начальное подсостояние. Переход из внешнего состояния действует из <em>любого</em> подсостояния (не нужно рисовать переход из каждого).</p>
+        </div>
+
+        <div class="schema">
+            <div class="sc-box" style="border-color:var(--accent);max-width:600px;margin:0 auto">
+                <strong style="color:var(--accent)">ДВИГАТЕЛЬ</strong>
+                <div style="display:flex;gap:12px;margin-top:12px">
+                    <div class="sc-box" style="border-color:var(--green);flex:1">
+                        <strong style="color:var(--green);font-size:.9em">ОСТАНОВЛЕН</strong>
+                    </div>
+                    <div style="align-self:center;color:var(--text2);font-size:.8em">start →</div>
+                    <div class="sc-box" style="border-color:var(--orange);flex:2">
+                        <strong style="color:var(--orange);font-size:.9em">РАБОТАЕТ</strong>
+                        <div style="display:flex;gap:8px;margin-top:8px">
+                            <div class="sc-box" style="border-color:var(--accent2);flex:1;padding:8px">
+                                <span style="font-size:.8em;color:var(--accent2)">ПРОГРЕВ</span>
+                            </div>
+                            <div style="align-self:center;font-size:.7em;color:var(--text2)">temp_ok →</div>
+                            <div class="sc-box" style="border-color:var(--accent2);flex:1;padding:8px">
+                                <span style="font-size:.8em;color:var(--accent2)">НОРМА</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p style="font-size:.8em;color:var(--text2);margin-top:8px">Переход <code>fault</code> из ДВИГАТЕЛЬ → ОШИБКА: действует и из ПРОГРЕВ, и из НОРМА, и из ОСТАНОВЛЕН</p>
+            </div>
+        </div>
+
+        <p>Без иерархии нужно было бы рисовать переход <code>fault</code> из каждого подсостояния отдельно. При 20 подсостояниях — это 20 стрелок вместо одной.</p>
+
+        <h3>2. Ортогональные регионы (параллелизм)</h3>
+
+        <div class="card highlight">
+            <p>Состояние может содержать несколько <strong>параллельных регионов</strong>, разделённых пунктирной линией. Система находится в одном подсостоянии <em>каждого</em> региона одновременно.</p>
+        </div>
+
+        <div class="schema">
+            <div class="sc-box" style="border-color:var(--accent);max-width:600px;margin:0 auto">
+                <strong style="color:var(--accent)">АВТОМОБИЛЬ</strong>
+                <div style="display:flex;gap:0;margin-top:12px">
+                    <div style="flex:1;border-right:2px dashed var(--border);padding-right:12px">
+                        <div style="font-size:.75em;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Двигатель</div>
+                        <div class="sc-box" style="border-color:var(--green);padding:6px;font-size:.85em">Выкл</div>
+                        <div class="sc-box" style="border-color:var(--orange);padding:6px;font-size:.85em">Вкл</div>
+                    </div>
+                    <div style="flex:1;padding-left:12px">
+                        <div style="font-size:.75em;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Коробка</div>
+                        <div class="sc-box" style="border-color:var(--green);padding:6px;font-size:.85em">P</div>
+                        <div class="sc-box" style="border-color:var(--accent2);padding:6px;font-size:.85em">D</div>
+                        <div class="sc-box" style="border-color:var(--accent2);padding:6px;font-size:.85em">R</div>
+                    </div>
+                </div>
+            </div>
+            <p style="font-size:.85em;color:var(--text2);margin-top:12px">Система одновременно в состоянии двигателя И коробки. Без регионов: 2×3 = 6 плоских состояний.</p>
+        </div>
+
+        <h3>3. Псевдосостояния «История»</h3>
+
+        <div class="card">
+            <p>При повторном входе в иерархическое состояние можно выбрать:</p>
+            <ul>
+                <li><strong>H (shallow history)</strong> — войти в то подсостояние верхнего уровня, в котором были при последнем выходе</li>
+                <li><strong>H* (deep history)</strong> — войти точно в то подсостояние любого уровня вложенности, где были</li>
+                <li><strong>Без истории</strong> — войти в начальное подсостояние (по умолчанию)</li>
+            </ul>
+            <p style="font-size:.85em;color:var(--text2)">Пример: робот уходит в АВАРИЮ из РАБОТАЕТ.ПРОГРЕВ. После сброса аварии с H* — возвращается в ПРОГРЕВ, а не начинает заново.</p>
+        </div>
+
+        <!-- ============ ФОРМАЛЬНОЕ ОПРЕДЕЛЕНИЕ ============ -->
+        <h2>Формальное определение</h2>
+
+        <div class="card highlight">
+            <p>Statechart — это расширенный автомат:</p>
+            <p style="font-size:1.05em;text-align:center;margin:16px 0">$$SC = (S, \rho, \psi, T, s_0)$$</p>
+            <table>
+                <tr><td>$S$</td><td>Множество состояний (включая вложенные)</td></tr>
+                <tr><td>$\rho: S \rightarrow S$</td><td>Функция <strong>родителя</strong> — кто в кого вложен (иерархия)</td></tr>
+                <tr><td>$\psi: S \rightarrow \{OR, AND, BASIC\}$</td><td><strong>Тип</strong> состояния: OR = обычная вложенность (одно активно), AND = параллельные регионы, BASIC = лист</td></tr>
+                <tr><td>$T$</td><td>Множество <strong>переходов</strong> с событиями, условиями и действиями</td></tr>
+                <tr><td>$s_0$</td><td>Начальная конфигурация</td></tr>
+            </table>
+        </div>
+
+        <div class="card">
+            <p>Каждый переход: $t = (source, target, event[guard]/action)$</p>
+            <p style="font-size:.85em;color:var(--text2)">Пример: <code>ПРОГРЕВ → НОРМА : temp_ok[temp > 60°C] / log("прогрев завершён")</code></p>
+        </div>
+
+        <!-- ============ ДЕЙСТВИЯ ============ -->
+        <h2>Действия: entry / exit / do</h2>
+
+        <p>Каждое состояние может иметь три типа связанных действий:</p>
+
+        <table>
+            <tr><th>Тип</th><th>Когда выполняется</th><th>Пример</th></tr>
+            <tr><td><code>entry/</code></td><td>При входе в состояние</td><td><code>entry/ включить_мотор()</code></td></tr>
+            <tr><td><code>exit/</code></td><td>При выходе из состояния</td><td><code>exit/ выключить_мотор()</code></td></tr>
+            <tr><td><code>do/</code></td><td>Пока система в состоянии (непрерывная активность)</td><td><code>do/ контролировать_температуру()</code></td></tr>
+        </table>
+
+        <div class="card">
+            <p><strong>Порядок при переходе A → B:</strong> exit(A) → action(перехода) → entry(B)</p>
+            <p>При иерархии: exit вызывается от глубокого к поверхностному, entry — от поверхностного к глубокому.</p>
+        </div>
+
+        <!-- ============ ПРЕИМУЩЕСТВА ============ -->
+        <h2>Преимущества над FSM</h2>
+
+        <div class="card">
+            <table>
+                <tr><th>Проблема FSM</th><th>Решение в Statecharts</th><th>Эффект</th></tr>
+                <tr>
+                    <td>Взрыв состояний при параллелизме</td>
+                    <td>Ортогональные регионы</td>
+                    <td>$k_1 + k_2$ вместо $k_1 \times k_2$</td>
+                </tr>
+                <tr>
+                    <td>Дублирование переходов</td>
+                    <td>Переход из родительского состояния</td>
+                    <td>1 стрелка вместо $n$</td>
+                </tr>
+                <tr>
+                    <td>Нечитаемый граф</td>
+                    <td>Иерархия + свёртка</td>
+                    <td>Обзор на верхнем уровне, детали внутри</td>
+                </tr>
+                <tr>
+                    <td>Потеря контекста при возврате</td>
+                    <td>History</td>
+                    <td>Возврат в последнее подсостояние</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- ============ ПРИМЕР: РОБОТ ============ -->
+        <h2>Пример: гексапод — верхнеуровневое управление</h2>
+
+        <div class="card highlight">
+            <p>Шестиногий робот с двумя параллельными подсистемами: <strong>навигация</strong> и <strong>баланс</strong>.</p>
+        </div>
+
+        <div class="schema">
+            <div class="sc-box" style="border-color:var(--accent);max-width:700px;margin:0 auto">
+                <strong style="color:var(--accent)">ГЕКСАПОД</strong>
+                <div style="display:flex;gap:0;margin-top:12px">
+                    <div style="flex:1;border-right:2px dashed var(--border);padding-right:12px">
+                        <div style="font-size:.75em;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Навигация</div>
+                        <div class="sc-box" style="border-color:var(--green);padding:6px;font-size:.85em">СТОП<br><span style="font-size:.75em;color:var(--text2)">entry/ все_ноги_домой()</span></div>
+                        <div class="sc-box" style="border-color:var(--orange);padding:6px;font-size:.85em">ДВИЖЕНИЕ<br>
+                            <span style="font-size:.75em;color:var(--text2)">→ ПРЯМО | ПОВОРОТ | ОБХОД_ПРЕП.</span>
+                        </div>
+                        <div class="sc-box" style="border-color:var(--accent2);padding:6px;font-size:.85em">ДОСТИГНУТО</div>
+                    </div>
+                    <div style="flex:1;padding-left:12px">
+                        <div style="font-size:.75em;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Баланс</div>
+                        <div class="sc-box" style="border-color:var(--green);padding:6px;font-size:.85em">СТАБИЛЕН</div>
+                        <div class="sc-box" style="border-color:var(--orange);padding:6px;font-size:.85em">КОРРЕКЦИЯ<br><span style="font-size:.75em;color:var(--text2)">do/ PID_stabilize()</span></div>
+                        <div class="sc-box" style="border-color:var(--red);padding:6px;font-size:.85em">ПАДЕНИЕ</div>
+                    </div>
+                </div>
+                <p style="font-size:.8em;color:var(--orange);margin-top:12px">Переход ПАДЕНИЕ → отправляет событие «emergency» → навигация переходит в СТОП из любого подсостояния ДВИЖЕНИЕ</p>
+            </div>
+        </div>
+
+        <!-- ============ ИНСТРУМЕНТЫ ============ -->
+        <h2>Инструменты</h2>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Stateflow (MATLAB)</h3>
+                <p style="font-size:.9em;color:var(--text2)">Промышленный стандарт. Полная поддержка Statecharts, генерация C-кода, верификация.</p>
+            </div>
+            <div class="card">
+                <h3>YAKINDU / itemis CREATE</h3>
+                <p style="font-size:.9em;color:var(--text2)">Бесплатный для некоммерческого использования. Графический редактор, генерация C/C++/Java.</p>
+            </div>
+            <div class="card">
+                <h3>XState (JavaScript)</h3>
+                <p style="font-size:.9em;color:var(--text2)">Популярная библиотека для веба. Statecharts с визуализатором. Генерация из JSON.</p>
+            </div>
+            <div class="card">
+                <h3>UML State Machine (любой UML-редактор)</h3>
+                <p style="font-size:.9em;color:var(--text2)">Enterprise Architect, StarUML, PlantUML. Statecharts стали частью стандарта UML 2.x.</p>
+            </div>
+        </div>
+
+        <!-- ============ ДАЛЬШЕ ============ -->
+        <h2>Дальше</h2>
+
+        <div class="card success">
+            <p>Statecharts решают проблемы иерархии и параллелизма для логики, но не моделируют время. Переходим к <a href="5-timed-petri.html" style="color:var(--green);font-weight:600">временным сетям Петри</a> — расширению, которое добавляет задержки и позволяет анализировать производительность.</p>
+        </div>
+    </div>
+</body>
+</html>

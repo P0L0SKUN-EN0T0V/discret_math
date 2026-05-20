@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8. Другие формализмы</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+    <style>
+        :root{--bg:#0f1117;--card:#1a1d2e;--border:#2a2d3e;--accent:#6c9eff;--accent2:#a78bfa;--green:#4ade80;--orange:#fb923c;--red:#f87171;--text:#e2e8f0;--text2:#94a3b8;--sidebar:#151825}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.8;display:flex;min-height:100vh}
+        .sidebar{width:260px;background:var(--sidebar);border-right:1px solid var(--border);padding:20px 0;position:fixed;height:100vh;overflow-y:auto}
+        .sidebar::-webkit-scrollbar{width:6px}
+        .sidebar::-webkit-scrollbar-track{background:var(--sidebar)}
+        .sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        .sidebar{scrollbar-width:thin;scrollbar-color:var(--border) var(--sidebar)}
+        .sidebar h3{color:var(--accent);padding:0 20px;margin-bottom:16px;font-size:1em}
+        .sidebar a{display:block;padding:8px 20px;color:var(--text2);text-decoration:none;font-size:.9em;border-left:3px solid transparent;transition:all .2s}
+        .sidebar a:hover{background:rgba(108,158,255,.08);color:var(--text)}
+        .sidebar a.active{border-left-color:var(--accent);color:var(--accent);background:rgba(108,158,255,.1)}
+        .sidebar .sep{height:1px;background:var(--border);margin:12px 20px}
+        .sidebar .section-title{color:var(--text2);font-size:.75em;text-transform:uppercase;letter-spacing:1px;padding:12px 20px 4px;font-weight:600}
+        .main{margin-left:260px;padding:48px 40px;max-width:920px;width:100%}
+        h1{font-size:2.1em;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+        .subtitle{color:var(--text2);margin-bottom:36px;font-size:1.05em}
+        h2{font-size:1.4em;color:var(--accent);margin:44px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        h3{font-size:1.1em;color:var(--accent2);margin:28px 0 12px}
+        p{margin:10px 0}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin:16px 0}
+        .card.highlight{border-left:4px solid var(--accent)}
+        .card.warn{border-left:4px solid var(--orange)}
+        .card.success{border-left:4px solid var(--green)}
+        .tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.8em;font-weight:600;margin:2px 4px 2px 0}
+        .tag.blue{background:rgba(108,158,255,.15);color:var(--accent)}
+        .tag.green{background:rgba(74,222,128,.15);color:var(--green)}
+        .tag.orange{background:rgba(251,146,60,.15);color:var(--orange)}
+        .tag.purple{background:rgba(167,139,250,.15);color:var(--accent2)}
+        ul,ol{padding-left:24px;margin:10px 0}li{margin:8px 0}
+        code{background:rgba(108,158,255,.1);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:.9em}
+        pre{background:#141620;border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:.85em;margin:14px 0;line-height:1.6}
+        table{width:100%;border-collapse:collapse;margin:12px 0}
+        th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+        th{color:var(--accent);font-weight:600}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .schema{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:32px 24px;margin:20px 0;text-align:center}
+        .num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:rgba(108,158,255,.15);color:var(--accent);font-weight:700;font-size:.85em;margin-right:8px}
+        @media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:24px 16px}}
+        @media(max-width:700px){.grid{grid-template-columns:1fr}}
+        @media print{body{display:block}.sidebar{display:none}.main{margin-left:0}body{background:#fff;color:#1a1a1a}.card{background:#f9f9f9;border-color:#ddd}h1{-webkit-text-fill-color:#2563eb}h2{color:#2563eb}h3{color:#7c3aed}code{background:#f0f0f0;color:#2563eb}pre{background:#f5f5f5;border-color:#ddd}}
+    </style>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar"></nav>
+    <script src="../nav.js"></script>
+
+    <div class="main">
+        <h1>Другие формализмы</h1>
+        <p class="subtitle">Цепи Маркова, алгебры процессов, клеточные автоматы, гибридные автоматы и другие</p>
+
+        <p>Помимо основных шести формализмов (FSM, сети Петри, Statecharts, TPN, BT, GRAFCET) существует ещё ряд важных моделей. Каждая заточена под свой класс задач.</p>
+
+        <!-- ============ ЦЕПИ МАРКОВА ============ -->
+        <h2>Цепи Маркова</h2>
+
+        <div class="card highlight">
+            <p><strong>Дискретная цепь Маркова (DTMC)</strong> — конечный автомат, где переходы <strong>вероятностные</strong>: из состояния $i$ в состояние $j$ с вероятностью $p_{ij}$, причём $\sum_j p_{ij} = 1$.</p>
+            <p style="text-align:center;font-size:1.1em;margin:12px 0">$$P(X_{n+1} = j \mid X_n = i) = p_{ij}$$</p>
+        </div>
+
+        <div class="card">
+            <p><strong>Ключевое свойство (марковское):</strong> будущее зависит только от настоящего, не от прошлого. «Не помнит, как попал в текущее состояние.»</p>
+            <p style="margin-top:10px"><strong>Что считают:</strong></p>
+            <ul>
+                <li>Стационарное распределение $\pi$: $\pi P = \pi$ — в каком состоянии система будет «в среднем»</li>
+                <li>Среднее время возврата, вероятность поглощения</li>
+                <li>MTTF (Mean Time To Failure) — надёжность</li>
+            </ul>
+            <p style="margin-top:10px"><strong>Применение:</strong> анализ надёжности, PageRank (Google), биоинформатика (HMM), финансы, телеком (модели трафика).</p>
+        </div>
+
+        <div class="card">
+            <h3>CTMC — Continuous Time Markov Chain</h3>
+            <p>Непрерывный аналог: время в каждом состоянии — экспоненциальная случайная величина. Матрица переходов заменяется на <strong>матрицу интенсивностей</strong> $Q$.</p>
+            <p style="font-size:.85em;color:var(--text2)">Связь с сетями Петри: стохастические сети Петри (SPN) при анализе сводятся к CTMC.</p>
+        </div>
+
+        <!-- ============ СЕТИ МАССОВОГО ОБСЛУЖИВАНИЯ ============ -->
+        <h2>Сети массового обслуживания</h2>
+
+        <div class="card">
+            <p><strong>Queueing Networks</strong> — формализм для систем с очередями: запросы приходят, ждут в очереди, обслуживаются, уходят. Основа теории массового обслуживания (ТМО).</p>
+            <p style="margin-top:10px"><strong>Нотация Кендалла:</strong> $A/S/c/K$ — тип входного потока / распределение обслуживания / число серверов / размер буфера.</p>
+            <ul>
+                <li>$M/M/1$ — пуассоновский поток, экспоненциальное обслуживание, 1 сервер</li>
+                <li>$M/D/c$ — пуассоновский поток, детерминированное обслуживание, $c$ серверов</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <p><strong>Применение:</strong></p>
+            <ul>
+                <li>Проектирование серверов: сколько инстансов нужно для 99-го перцентиля &lt; 200ms?</li>
+                <li>Производственные линии: оптимальный размер буфера между станками</li>
+                <li>Телеком: сколько каналов нужно для заданного процента отказов</li>
+            </ul>
+            <p style="font-size:.85em;color:var(--text2)">Связь с сетями Петри: места = очереди, переходы = серверы, токены = запросы.</p>
+        </div>
+
+        <!-- ============ АЛГЕБРЫ ПРОЦЕССОВ ============ -->
+        <h2>Алгебры процессов</h2>
+
+        <div class="card highlight">
+            <p>Текстовые (алгебраические) формализмы для описания параллельных и взаимодействующих процессов. Процессы определяются рекурсивными уравнениями с операторами.</p>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>CSP (Communicating Sequential Processes)</h3>
+                <p>Хоар, 1978. Процессы обмениваются через <strong>синхронные каналы</strong>. Оба процесса должны быть готовы для передачи.</p>
+                <pre style="font-size:.85em">BUFF = left?x → right!x → BUFF
+SYS = PROD ∥ BUFF ∥ CONS</pre>
+                <p style="font-size:.85em;color:var(--text2)">Повлиял на Go (goroutines + channels).</p>
+            </div>
+            <div class="card">
+                <h3>CCS (Calculus of Communicating Systems)</h3>
+                <p>Милнер, 1980. Процессы взаимодействуют через <strong>комплементарные действия</strong>: $a$ и $\bar{a}$ синхронизируются в $\tau$ (внутреннее действие).</p>
+                <pre style="font-size:.85em">P = a.P' + b.P''
+Q = ā.Q'
+P | Q → P' | Q' (синхронизация)</pre>
+                <p style="font-size:.85em;color:var(--text2)">Основа π-calculus (мобильные процессы).</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <p><strong>Применение:</strong> верификация протоколов (Bluetooth, TLS), модель параллельных программ, формальная спецификация.</p>
+            <p><strong>Инструменты:</strong> FDR4 (для CSP), CADP (для CCS/LOTOS), mCRL2.</p>
+        </div>
+
+        <!-- ============ КЛЕТОЧНЫЕ АВТОМАТЫ ============ -->
+        <h2>Клеточные автоматы</h2>
+
+        <div class="card">
+            <p><strong>Cellular Automata (CA)</strong> — решётка клеток, каждая в одном из конечного числа состояний. На каждом шаге состояние клетки обновляется по <strong>локальному правилу</strong>, зависящему от соседей.</p>
+            <p style="text-align:center;font-size:1.05em;margin:12px 0">$$s_i^{t+1} = f(s_{i-1}^t, s_i^t, s_{i+1}^t)$$</p>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Примеры</h3>
+                <ul>
+                    <li><strong>Game of Life</strong> (Конвей) — 2D решётка, жив/мёртв, правила 23/3</li>
+                    <li><strong>Rule 110</strong> — 1D, доказана Тьюринг-полнота</li>
+                    <li><strong>Lattice Boltzmann</strong> — моделирование гидродинамики</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Применение</h3>
+                <ul>
+                    <li>Моделирование трафика (Nagel-Schreckenberg)</li>
+                    <li>Распространение огня, эпидемий</li>
+                    <li>Самоорганизация, эмерджентное поведение</li>
+                    <li>Криптография (CA-based PRNG)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ============ ГИБРИДНЫЕ АВТОМАТЫ ============ -->
+        <h2>Гибридные автоматы</h2>
+
+        <div class="card highlight">
+            <p><strong>Hybrid Automata</strong> — объединяют дискретное и непрерывное: конечный автомат + дифференциальные уравнения в каждом состоянии. Состояние системы = (дискретный режим, непрерывный вектор).</p>
+        </div>
+
+        <div class="card">
+            <p style="text-align:center;font-size:1.05em;margin:12px 0">$$H = (Q, X, \textit{Init}, f, \textit{Inv}, E, G, R)$$</p>
+            <ul>
+                <li>$Q$ — дискретные режимы, $X \subseteq \mathbb{R}^n$ — непрерывные переменные</li>
+                <li>$f: Q \times X \rightarrow \mathbb{R}^n$ — динамика ($\dot{x} = f(q, x)$) в каждом режиме</li>
+                <li>$\textit{Inv}: Q \rightarrow 2^X$ — инвариант (пока $x \in \textit{Inv}(q)$, остаёмся в $q$)</li>
+                <li>$G$ — guard (условие переключения), $R$ — reset (сброс переменных при переходе)</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <p><strong>Пример: термостат.</strong> Два режима: «нагрев» ($\dot{T} = +k_1$) и «охлаждение» ($\dot{T} = -k_2$). Переключение: нагрев → охлаждение при $T \geq T_{max}$, охлаждение → нагрев при $T \leq T_{min}$.</p>
+            <p style="margin-top:10px"><strong>Применение:</strong> автопилоты, робототехника (контакт/бесконтакт), электроника (DC-DC конвертеры), биология (генные сети).</p>
+            <p style="margin-top:10px"><strong>Инструменты:</strong> UPPAAL, SpaceEx, HyTech, PHAVer.</p>
+        </div>
+
+        <div class="card warn">
+            <p><strong>Сложность:</strong> верификация гибридных автоматов в общем случае <strong>неразрешима</strong>. Даже для простых линейных систем задача достижимости неразрешима. Существуют разрешимые подклассы: timed automata (только часы), rectangular automata.</p>
+        </div>
+
+        <!-- ============ ВРЕМЕННЫЕ АВТОМАТЫ ============ -->
+        <h2>Временные автоматы (Timed Automata)</h2>
+
+        <div class="card">
+            <p>Подкласс гибридных автоматов, где непрерывные переменные — только <strong>часы</strong> ($\dot{x} = 1$). Достаточно выразительны для real-time систем, но задача верификации <strong>разрешима</strong> (PSPACE-complete).</p>
+            <p style="margin-top:10px"><strong>Стандартный инструмент:</strong> UPPAAL — model checker для сетей временных автоматов. Верификация свойств в TCTL (Timed CTL).</p>
+            <p style="font-size:.85em;color:var(--text2)">Близки к Time Petri Nets по выразительности, но с другим синтаксисом и инструментарием.</p>
+        </div>
+
+        <!-- ============ СВОДНАЯ ТАБЛИЦА ============ -->
+        <h2>Сводная таблица</h2>
+
+        <table>
+            <tr><th>Формализм</th><th>Суть</th><th>Главная сила</th><th>Область</th></tr>
+            <tr>
+                <td>Цепи Маркова</td>
+                <td>FSM + вероятности</td>
+                <td>Стохастический анализ</td>
+                <td>Надёжность, трафик, ML</td>
+            </tr>
+            <tr>
+                <td>Queueing Networks</td>
+                <td>Очереди + серверы</td>
+                <td>Производительность</td>
+                <td>IT-инфра, производство</td>
+            </tr>
+            <tr>
+                <td>CSP / CCS</td>
+                <td>Алгебра процессов</td>
+                <td>Верификация протоколов</td>
+                <td>Протоколы, параллелизм</td>
+            </tr>
+            <tr>
+                <td>Клеточные автоматы</td>
+                <td>Решётка + локальные правила</td>
+                <td>Эмерджентное поведение</td>
+                <td>Физика, биология, трафик</td>
+            </tr>
+            <tr>
+                <td>Гибридные автоматы</td>
+                <td>FSM + дифф. уравнения</td>
+                <td>Дискретно-непрерывные системы</td>
+                <td>Автопилоты, робототехника</td>
+            </tr>
+            <tr>
+                <td>Timed Automata</td>
+                <td>FSM + часы</td>
+                <td>Верификация real-time</td>
+                <td>Встраиваемые системы</td>
+            </tr>
+        </table>
+
+        <!-- ============ ДАЛЬШЕ ============ -->
+        <h2>Дальше</h2>
+
+        <div class="card success">
+            <p>Мы разобрали все основные формализмы. Переходим к <a href="9-comparison.html" style="color:var(--green);font-weight:600">финальному сравнению</a> — таблица «когда что использовать» и рекомендации по выбору.</p>
+        </div>
+    </div>
+</body>
+</html>

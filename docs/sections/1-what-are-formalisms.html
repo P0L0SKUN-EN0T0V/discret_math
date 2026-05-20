@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1. Что такое формализмы моделирования</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+    <style>
+        :root{--bg:#0f1117;--card:#1a1d2e;--border:#2a2d3e;--accent:#6c9eff;--accent2:#a78bfa;--green:#4ade80;--orange:#fb923c;--red:#f87171;--text:#e2e8f0;--text2:#94a3b8;--sidebar:#151825}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.8;display:flex;min-height:100vh}
+        .sidebar{width:260px;background:var(--sidebar);border-right:1px solid var(--border);padding:20px 0;position:fixed;height:100vh;overflow-y:auto}
+        .sidebar::-webkit-scrollbar{width:6px}
+        .sidebar::-webkit-scrollbar-track{background:var(--sidebar)}
+        .sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        .sidebar{scrollbar-width:thin;scrollbar-color:var(--border) var(--sidebar)}
+        .sidebar h3{color:var(--accent);padding:0 20px;margin-bottom:16px;font-size:1em}
+        .sidebar a{display:block;padding:8px 20px;color:var(--text2);text-decoration:none;font-size:.9em;border-left:3px solid transparent;transition:all .2s}
+        .sidebar a:hover{background:rgba(108,158,255,.08);color:var(--text)}
+        .sidebar a.active{border-left-color:var(--accent);color:var(--accent);background:rgba(108,158,255,.1)}
+        .sidebar .sep{height:1px;background:var(--border);margin:12px 20px}
+        .sidebar .section-title{color:var(--text2);font-size:.75em;text-transform:uppercase;letter-spacing:1px;padding:12px 20px 4px;font-weight:600}
+        .main{margin-left:260px;padding:48px 40px;max-width:920px;width:100%}
+        h1{font-size:2.1em;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+        .subtitle{color:var(--text2);margin-bottom:36px;font-size:1.05em}
+        h2{font-size:1.4em;color:var(--accent);margin:44px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        h3{font-size:1.1em;color:var(--accent2);margin:28px 0 12px}
+        p{margin:10px 0}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin:16px 0}
+        .card.highlight{border-left:4px solid var(--accent)}
+        .card.warn{border-left:4px solid var(--orange)}
+        .card.success{border-left:4px solid var(--green)}
+        .tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.8em;font-weight:600;margin:2px 4px 2px 0}
+        .tag.blue{background:rgba(108,158,255,.15);color:var(--accent)}
+        .tag.green{background:rgba(74,222,128,.15);color:var(--green)}
+        .tag.orange{background:rgba(251,146,60,.15);color:var(--orange)}
+        .tag.purple{background:rgba(167,139,250,.15);color:var(--accent2)}
+        ul,ol{padding-left:24px;margin:10px 0}li{margin:8px 0}
+        code{background:rgba(108,158,255,.1);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:.9em}
+        pre{background:#141620;border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:.85em;margin:14px 0;line-height:1.6}
+        table{width:100%;border-collapse:collapse;margin:12px 0}
+        th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+        th{color:var(--accent);font-weight:600}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .schema{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:32px 24px;margin:20px 0;text-align:center}
+        .num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:rgba(108,158,255,.15);color:var(--accent);font-weight:700;font-size:.85em;margin-right:8px}
+        @media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:24px 16px}}
+        @media(max-width:700px){.grid{grid-template-columns:1fr}}
+        @media print{body{display:block}.sidebar{display:none}.main{margin-left:0}body{background:#fff;color:#1a1a1a}.card{background:#f9f9f9;border-color:#ddd}h1{-webkit-text-fill-color:#2563eb}h2{color:#2563eb}h3{color:#7c3aed}code{background:#f0f0f0;color:#2563eb}pre{background:#f5f5f5;border-color:#ddd}}
+    </style>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar"></nav>
+    <script src="../nav.js"></script>
+
+    <div class="main">
+        <h1>Что такое формализмы моделирования</h1>
+        <p class="subtitle">Зачем нужны формальные модели, как они устроены, и какие задачи решают</p>
+
+        <!-- ============ ПРОБЛЕМА ============ -->
+        <h2>Проблема: почему слов недостаточно</h2>
+
+        <p>Представь: ты проектируешь систему управления роботом-манипулятором на заводе. У робота есть три задачи: взять деталь, переместить её, положить на конвейер. Плюс аварийная остановка, ожидание детали, обработка ошибок датчиков.</p>
+
+        <div class="card warn">
+            <p><strong>Словесное описание:</strong> «Робот ждёт деталь. Когда датчик видит деталь, робот берёт её. Потом перемещает к конвейеру. Если во время перемещения нажали аварийную кнопку, робот останавливается. После снятия аварии робот продолжает...»</p>
+            <p style="margin-top:10px">Проблемы: что значит «продолжает» — с того же места? А если деталь выпала? А если два датчика сработали одновременно? Словесное описание <strong>неоднозначно</strong> и <strong>неполно</strong>.</p>
+        </div>
+
+        <p>Формальная модель решает эту проблему: она заставляет тебя <strong>явно</strong> описать каждое состояние, каждый переход, каждое условие. Ничего не остаётся «подразумеваемым».</p>
+
+        <!-- ============ ЧТО ТАКОЕ ============ -->
+        <h2>Определение</h2>
+
+        <div class="card highlight">
+            <p><strong>Формализм моделирования</strong> — это математический аппарат (язык + правила), который позволяет:</p>
+            <ol>
+                <li><strong>Описать</strong> поведение системы однозначно и полно</li>
+                <li><strong>Анализировать</strong> свойства модели математически (без запуска реальной системы)</li>
+                <li><strong>Верифицировать</strong> — доказать, что система удовлетворяет требованиям</li>
+                <li><strong>Реализовать</strong> — автоматически сгенерировать код из модели</li>
+            </ol>
+        </div>
+
+        <p>Формальная модель — это <strong>абстракция</strong>. Она выбрасывает физические детали (напряжения, скорости, частоты) и оставляет только <strong>логику поведения</strong>: в каком состоянии система, что её переключает, что происходит при переключении.</p>
+
+        <!-- ============ ИЗ ЧЕГО СОСТОИТ ============ -->
+        <h2>Из чего состоит любая формальная модель</h2>
+
+        <p>Несмотря на разнообразие формализмов, у всех есть общая структура из четырёх компонент:</p>
+
+        <div class="grid">
+            <div class="card">
+                <h3>1. Состояния</h3>
+                <p>Множество возможных конфигураций системы. В FSM — конечный набор именованных состояний. В сетях Петри — распределение токенов по местам (маркировка).</p>
+                <p style="font-size:.85em;color:var(--text2)">Пример: <code>ОЖИДАНИЕ</code>, <code>ЗАХВАТ</code>, <code>ПЕРЕМЕЩЕНИЕ</code>, <code>АВАРИЯ</code></p>
+            </div>
+            <div class="card">
+                <h3>2. Переходы</h3>
+                <p>Правила, по которым система меняет состояние. Задаются условием (событие, предикат) и действием (что происходит при переходе).</p>
+                <p style="font-size:.85em;color:var(--text2)">Пример: <code>ОЖИДАНИЕ</code> → <code>ЗАХВАТ</code> при событии «деталь_обнаружена»</p>
+            </div>
+            <div class="card">
+                <h3>3. Начальное состояние</h3>
+                <p>С чего система начинает работу. В FSM — одно выделенное состояние. В сетях Петри — начальная маркировка (распределение токенов).</p>
+                <p style="font-size:.85em;color:var(--text2)">Пример: при включении робот в состоянии <code>ОЖИДАНИЕ</code></p>
+            </div>
+            <div class="card">
+                <h3>4. Алфавит / события</h3>
+                <p>Множество входных сигналов, на которые система реагирует. Определяет «язык», на котором система общается с внешним миром.</p>
+                <p style="font-size:.85em;color:var(--text2)">Пример: {деталь_обнаружена, захват_ОК, авария, сброс_аварии}</p>
+            </div>
+        </div>
+
+        <!-- ============ НЕПРЕРЫВНОЕ vs ДИСКРЕТНОЕ ============ -->
+        <h2>Непрерывное vs дискретное управление</h2>
+
+        <p>В теории управления есть два уровня:</p>
+
+        <table>
+            <tr><th></th><th>Непрерывное (ТАУ)</th><th>Дискретное (формализмы)</th></tr>
+            <tr>
+                <td><strong>Что описывает</strong></td>
+                <td>Как переменная меняется во времени</td>
+                <td>В каком режиме система и когда переключается</td>
+            </tr>
+            <tr>
+                <td><strong>Мат. аппарат</strong></td>
+                <td>Дифференциальные уравнения, передаточные функции</td>
+                <td>Графы, автоматы, сети Петри</td>
+            </tr>
+            <tr>
+                <td><strong>Переменные</strong></td>
+                <td>$x(t) \in \mathbb{R}$ — непрерывные</td>
+                <td>$q \in \{q_1, q_2, \ldots, q_n\}$ — дискретные</td>
+            </tr>
+            <tr>
+                <td><strong>Пример</strong></td>
+                <td>ПИД-регулятор стабилизирует угол</td>
+                <td>Автомат переключает режимы: «стоп → старт → работа → стоп»</td>
+            </tr>
+        </table>
+
+        <div class="card">
+            <p>В реальных системах оба уровня работают вместе. <strong>Верхнеуровневое управление</strong> (дискретное) решает <em>что</em> делать — какой режим включить, какой алгоритм запустить. <strong>Низкоуровневое</strong> (непрерывное) решает <em>как</em> — с какой скоростью вращать мотор, какой момент приложить.</p>
+            <p style="margin-top:10px;font-size:.9em;color:var(--text2)">Формализмы из этого курса — именно про верхний уровень: логику переключения режимов.</p>
+        </div>
+
+        <!-- ============ ЧТО МОЖНО АНАЛИЗИРОВАТЬ ============ -->
+        <h2>Что можно анализировать</h2>
+
+        <p>Главное преимущество формальной модели — её можно проверить <strong>до</strong> реализации. Вот ключевые свойства, которые проверяют:</p>
+
+        <div class="card">
+            <h3>Достижимость (reachability)</h3>
+            <p>Можно ли из начального состояния попасть в заданное? Если нет — значит какой-то режим системы никогда не активируется (баг в логике).</p>
+            <p style="font-size:.85em;color:var(--text2)">«Может ли робот когда-нибудь оказаться в состоянии ЗАВЕРШЕНО?»</p>
+        </div>
+
+        <div class="card">
+            <h3>Живость (liveness)</h3>
+            <p>Гарантировано ли, что система не зависнет? Живая система — та, в которой из любого достижимого состояния всегда есть куда перейти.</p>
+            <p style="font-size:.85em;color:var(--text2)">«Не застрянет ли робот навсегда в ожидании детали, которая никогда не придёт?»</p>
+        </div>
+
+        <div class="card">
+            <h3>Безопасность (safety)</h3>
+            <p>Гарантировано ли, что система <strong>никогда</strong> не попадёт в опасное состояние? Это свойство про запрет, а не про гарантию.</p>
+            <p style="font-size:.85em;color:var(--text2)">«Никогда ли робот не включит мотор при открытом ограждении?»</p>
+        </div>
+
+        <div class="card">
+            <h3>Отсутствие тупиков (deadlock-freedom)</h3>
+            <p>Нет ли состояния, из которого нет выхода? Тупик (deadlock) — это когда система замерла и не реагирует ни на что.</p>
+            <p style="font-size:.85em;color:var(--text2)">«Два процесса ждут друг друга и оба стоят вечно.»</p>
+        </div>
+
+        <div class="card">
+            <h3>Ограниченность (boundedness)</h3>
+            <p>Не растут ли ресурсы бесконечно? В сетях Петри — не накапливаются ли токены (= переполнение буфера, утечка памяти).</p>
+            <p style="font-size:.85em;color:var(--text2)">«Очередь задач для робота не переполнится?»</p>
+        </div>
+
+        <!-- ============ ЗАЧЕМ ЭТО ИНЖЕНЕРУ ============ -->
+        <h2>Зачем это инженеру</h2>
+
+        <div class="card success">
+            <p>Формальные модели используются везде, где ошибка в логике стоит дорого:</p>
+            <ul>
+                <li><strong>Робототехника</strong> — управление поведением (BT, FSM, GRAFCET)</li>
+                <li><strong>Промышленная автоматика</strong> — программирование ПЛК (GRAFCET/SFC)</li>
+                <li><strong>Протоколы связи</strong> — верификация корректности (сети Петри, алгебры процессов)</li>
+                <li><strong>Встраиваемые системы</strong> — firmware, контроллеры (FSM, Statecharts)</li>
+                <li><strong>Безопасность</strong> — сертификация DO-178C, IEC 61508 (все формализмы)</li>
+                <li><strong>Геймдев</strong> — AI персонажей (Behaviour Trees, FSM)</li>
+            </ul>
+        </div>
+
+        <!-- ============ КЛАССИФИКАЦИЯ ============ -->
+        <h2>Классификация формализмов</h2>
+
+        <p>Формализмы можно разделить по нескольким осям:</p>
+
+        <table>
+            <tr><th>Критерий</th><th>Варианты</th><th>Примеры</th></tr>
+            <tr>
+                <td><strong>Параллелизм</strong></td>
+                <td>Последовательные / параллельные</td>
+                <td>FSM — последовательный; сети Петри — параллельный</td>
+            </tr>
+            <tr>
+                <td><strong>Время</strong></td>
+                <td>Нетайминговые / тайминговые</td>
+                <td>FSM — без времени; временные сети Петри — с временем</td>
+            </tr>
+            <tr>
+                <td><strong>Иерархия</strong></td>
+                <td>Плоские / иерархические</td>
+                <td>FSM — плоский; Statecharts — иерархический</td>
+            </tr>
+            <tr>
+                <td><strong>Детерминизм</strong></td>
+                <td>Детерминированные / стохастические</td>
+                <td>FSM — детерминированный; цепи Маркова — стохастические</td>
+            </tr>
+            <tr>
+                <td><strong>Выразительность</strong></td>
+                <td>Регулярные языки → контекстно-свободные → полные по Тьюрингу</td>
+                <td>FSM &lt; сети Петри &lt; машина Тьюринга</td>
+            </tr>
+        </table>
+
+        <!-- ============ МАТЕМАТИЧЕСКИЙ БЭКГРАУНД ============ -->
+        <h2>Математический минимум</h2>
+
+        <p>Для понимания формализмов достаточно базовых понятий:</p>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Множества и кортежи</h3>
+                <p>Формализм описывается как кортеж: $\mathcal{A} = (Q, \Sigma, \delta, q_0, F)$. Каждый элемент — множество (состояний, символов, переходов).</p>
+            </div>
+            <div class="card">
+                <h3>Графы</h3>
+                <p>Большинство формализмов визуализируются как ориентированные графы: узлы = состояния, рёбра = переходы. Граф — это пара $(V, E)$.</p>
+            </div>
+            <div class="card">
+                <h3>Функции и отображения</h3>
+                <p>Функция перехода $\delta: Q \times \Sigma \rightarrow Q$ — по текущему состоянию и входу даёт следующее состояние.</p>
+            </div>
+            <div class="card">
+                <h3>Матрицы (для сетей Петри)</h3>
+                <p>Инцидентность сети Петри описывается матрицей $C = W^+ - W^-$, где $W^+$ и $W^-$ — матрицы выходных и входных весов.</p>
+            </div>
+        </div>
+
+        <!-- ============ ДАЛЬШЕ ============ -->
+        <h2>Дальше</h2>
+
+        <div class="card success">
+            <p>Теперь, когда понятна общая картина, переходим к конкретным формализмам. Начнём с самого базового — <a href="2-fsm.html" style="color:var(--green);font-weight:600">конечные автоматы (FSM)</a>. Это фундамент, на котором построены все остальные.</p>
+        </div>
+    </div>
+</body>
+</html>

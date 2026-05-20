@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2. Конечные автоматы (FSM)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+    <style>
+        :root{--bg:#0f1117;--card:#1a1d2e;--border:#2a2d3e;--accent:#6c9eff;--accent2:#a78bfa;--green:#4ade80;--orange:#fb923c;--red:#f87171;--text:#e2e8f0;--text2:#94a3b8;--sidebar:#151825}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.8;display:flex;min-height:100vh}
+        .sidebar{width:260px;background:var(--sidebar);border-right:1px solid var(--border);padding:20px 0;position:fixed;height:100vh;overflow-y:auto}
+        .sidebar::-webkit-scrollbar{width:6px}
+        .sidebar::-webkit-scrollbar-track{background:var(--sidebar)}
+        .sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        .sidebar{scrollbar-width:thin;scrollbar-color:var(--border) var(--sidebar)}
+        .sidebar h3{color:var(--accent);padding:0 20px;margin-bottom:16px;font-size:1em}
+        .sidebar a{display:block;padding:8px 20px;color:var(--text2);text-decoration:none;font-size:.9em;border-left:3px solid transparent;transition:all .2s}
+        .sidebar a:hover{background:rgba(108,158,255,.08);color:var(--text)}
+        .sidebar a.active{border-left-color:var(--accent);color:var(--accent);background:rgba(108,158,255,.1)}
+        .sidebar .sep{height:1px;background:var(--border);margin:12px 20px}
+        .sidebar .section-title{color:var(--text2);font-size:.75em;text-transform:uppercase;letter-spacing:1px;padding:12px 20px 4px;font-weight:600}
+        .main{margin-left:260px;padding:48px 40px;max-width:920px;width:100%}
+        h1{font-size:2.1em;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+        .subtitle{color:var(--text2);margin-bottom:36px;font-size:1.05em}
+        h2{font-size:1.4em;color:var(--accent);margin:44px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        h3{font-size:1.1em;color:var(--accent2);margin:28px 0 12px}
+        p{margin:10px 0}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin:16px 0}
+        .card.highlight{border-left:4px solid var(--accent)}
+        .card.warn{border-left:4px solid var(--orange)}
+        .card.success{border-left:4px solid var(--green)}
+        .tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.8em;font-weight:600;margin:2px 4px 2px 0}
+        .tag.blue{background:rgba(108,158,255,.15);color:var(--accent)}
+        .tag.green{background:rgba(74,222,128,.15);color:var(--green)}
+        .tag.orange{background:rgba(251,146,60,.15);color:var(--orange)}
+        .tag.purple{background:rgba(167,139,250,.15);color:var(--accent2)}
+        ul,ol{padding-left:24px;margin:10px 0}li{margin:8px 0}
+        code{background:rgba(108,158,255,.1);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:.9em}
+        pre{background:#141620;border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:.85em;margin:14px 0;line-height:1.6}
+        table{width:100%;border-collapse:collapse;margin:12px 0}
+        th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+        th{color:var(--accent);font-weight:600}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .schema{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:32px 24px;margin:20px 0;text-align:center}
+        .num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:rgba(108,158,255,.15);color:var(--accent);font-weight:700;font-size:.85em;margin-right:8px}
+        .fsm-diagram{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin:16px 0}
+        .fsm-state{border:2px solid var(--accent);border-radius:50%;width:80px;height:80px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.85em;text-align:center}
+        .fsm-state.active{background:rgba(108,158,255,.15)}
+        .fsm-state.accept{border-width:4px}
+        .fsm-arrow{color:var(--text2);font-size:.85em;text-align:center;min-width:80px}
+        @media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:24px 16px}}
+        @media(max-width:700px){.grid{grid-template-columns:1fr}}
+        @media print{body{display:block}.sidebar{display:none}.main{margin-left:0}body{background:#fff;color:#1a1a1a}.card{background:#f9f9f9;border-color:#ddd}h1{-webkit-text-fill-color:#2563eb}h2{color:#2563eb}h3{color:#7c3aed}code{background:#f0f0f0;color:#2563eb}pre{background:#f5f5f5;border-color:#ddd}}
+    </style>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar"></nav>
+    <script src="../nav.js"></script>
+
+    <div class="main">
+        <h1>Конечные автоматы (FSM)</h1>
+        <p class="subtitle">Finite State Machine — фундамент дискретного моделирования</p>
+
+        <!-- ============ ИНТУИЦИЯ ============ -->
+        <h2>Интуиция</h2>
+
+        <p>Конечный автомат — это самая простая модель дискретной системы. Система находится в одном из конечного числа <strong>состояний</strong>. При получении <strong>входного сигнала</strong> она переходит в другое состояние (или остаётся в том же).</p>
+
+        <div class="card highlight">
+            <p><strong>Аналогия:</strong> турникет в метро. Два состояния: <code>ЗАБЛОКИРОВАН</code> и <code>РАЗБЛОКИРОВАН</code>. Два входа: «жетон» и «проход». Поведение полностью определяется таблицей переходов.</p>
+        </div>
+
+        <div class="schema">
+            <div class="fsm-diagram">
+                <div class="fsm-state active" style="border-color:var(--orange)">ЗАБЛОК.</div>
+                <div class="fsm-arrow">
+                    жетон →<br>
+                    ← проход
+                </div>
+                <div class="fsm-state" style="border-color:var(--green)">РАЗБЛОК.</div>
+            </div>
+            <p style="font-size:.85em;color:var(--text2);margin-top:12px">Жетон в заблокированном → разблокируется. Проход в разблокированном → блокируется обратно.</p>
+        </div>
+
+        <!-- ============ ФОРМАЛЬНОЕ ОПРЕДЕЛЕНИЕ ============ -->
+        <h2>Формальное определение</h2>
+
+        <div class="card highlight">
+            <p>Детерминированный конечный автомат (DFA) — это пятёрка:</p>
+            <p style="font-size:1.2em;text-align:center;margin:16px 0">$$\mathcal{A} = (Q, \Sigma, \delta, q_0, F)$$</p>
+            <table>
+                <tr><td>$Q$</td><td>Конечное множество <strong>состояний</strong></td><td>$\{q_0, q_1, q_2, \ldots\}$</td></tr>
+                <tr><td>$\Sigma$</td><td>Конечный <strong>входной алфавит</strong></td><td>$\{a, b, c, \ldots\}$</td></tr>
+                <tr><td>$\delta$</td><td><strong>Функция переходов</strong> $Q \times \Sigma \rightarrow Q$</td><td>$(q_0, a) \mapsto q_1$</td></tr>
+                <tr><td>$q_0$</td><td><strong>Начальное состояние</strong> $q_0 \in Q$</td><td></td></tr>
+                <tr><td>$F$</td><td>Множество <strong>допускающих состояний</strong> $F \subseteq Q$</td><td></td></tr>
+            </table>
+        </div>
+
+        <p><strong>Детерминированный</strong> означает: для каждой пары (состояние, вход) существует ровно один переход. Никакой неоднозначности.</p>
+
+        <!-- ============ ВИДЫ ============ -->
+        <h2>Виды конечных автоматов</h2>
+
+        <h3>По детерминизму</h3>
+
+        <div class="grid">
+            <div class="card">
+                <h3>DFA — детерминированный</h3>
+                <p>$\delta: Q \times \Sigma \rightarrow Q$</p>
+                <p>Из каждого состояния по каждому символу — <strong>ровно один</strong> переход. Однозначное поведение.</p>
+                <p style="font-size:.85em;color:var(--text2)">Используется в реальных системах управления, где поведение должно быть предсказуемым.</p>
+            </div>
+            <div class="card">
+                <h3>NFA — недетерминированный</h3>
+                <p>$\delta: Q \times \Sigma \rightarrow 2^Q$</p>
+                <p>Из одного состояния по одному символу — <strong>несколько</strong> возможных переходов. Плюс $\varepsilon$-переходы (без входа).</p>
+                <p style="font-size:.85em;color:var(--text2)">Удобнее для моделирования, но всегда можно преобразовать в DFA (ценой роста числа состояний).</p>
+            </div>
+        </div>
+
+        <div class="card warn">
+            <p><strong>Теорема:</strong> для любого NFA существует эквивалентный DFA. Но число состояний DFA может быть до $2^{|Q_{\text{NFA}}|}$ — экспоненциальный взрыв. Пример: NFA с 5 состояниями может потребовать DFA с 32 состояниями.</p>
+        </div>
+
+        <h3>По типу выхода</h3>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Автомат Мура</h3>
+                <p>Выход зависит <strong>только от состояния</strong>:</p>
+                <p style="text-align:center">$\lambda: Q \rightarrow \Gamma$</p>
+                <p style="font-size:.85em;color:var(--text2)">Каждому состоянию сопоставлен свой выходной сигнал. Выход меняется при смене состояния.</p>
+                <p><strong>Пример:</strong> светофор. Состояние «КРАСНЫЙ» → выход «стоп». Состояние «ЗЕЛЁНЫЙ» → выход «можно ехать».</p>
+            </div>
+            <div class="card">
+                <h3>Автомат Мили</h3>
+                <p>Выход зависит от <strong>состояния И входа</strong>:</p>
+                <p style="text-align:center">$\lambda: Q \times \Sigma \rightarrow \Gamma$</p>
+                <p style="font-size:.85em;color:var(--text2)">Выходной сигнал привязан к переходу, а не к состоянию. Более компактные модели.</p>
+                <p><strong>Пример:</strong> автомат оплаты — выход «звенит» только при переходе из «ожидание» в «оплачено» (т.е. в момент опускания монеты).</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <p><strong>Мур vs Мили:</strong> эквивалентны по выразительности. Автомат Мура всегда можно превратить в автомат Мили и наоборот. Мили обычно компактнее (меньше состояний), Мура — проще для реализации (выход стабилен внутри состояния).</p>
+        </div>
+
+        <!-- ============ ПРИМЕР: РОБОТ ============ -->
+        <h2>Пример: управление роботом-манипулятором</h2>
+
+        <p>Задача: робот берёт детали с конвейера и складывает на паллету. Нужно описать верхнеуровневую логику.</p>
+
+        <div class="card highlight">
+            <p><strong>Множество состояний:</strong></p>
+            <p>$Q = \{$<code>IDLE</code>, <code>APPROACH</code>, <code>GRIP</code>, <code>LIFT</code>, <code>MOVE</code>, <code>PLACE</code>, <code>ERROR</code>$\}$</p>
+            <p style="margin-top:12px"><strong>Алфавит событий:</strong></p>
+            <p>$\Sigma = \{$part_detected, reached, gripped, lifted, arrived, placed, fault, reset$\}$</p>
+            <p style="margin-top:12px"><strong>Начальное состояние:</strong> $q_0 = $ <code>IDLE</code></p>
+        </div>
+
+        <h3>Таблица переходов $\delta$</h3>
+
+        <table>
+            <tr><th>Из состояния</th><th>Событие</th><th>В состояние</th><th>Действие (Мили)</th></tr>
+            <tr><td><code>IDLE</code></td><td>part_detected</td><td><code>APPROACH</code></td><td>move_to_pickup()</td></tr>
+            <tr><td><code>APPROACH</code></td><td>reached</td><td><code>GRIP</code></td><td>close_gripper()</td></tr>
+            <tr><td><code>GRIP</code></td><td>gripped</td><td><code>LIFT</code></td><td>lift_arm()</td></tr>
+            <tr><td><code>LIFT</code></td><td>lifted</td><td><code>MOVE</code></td><td>move_to_pallet()</td></tr>
+            <tr><td><code>MOVE</code></td><td>arrived</td><td><code>PLACE</code></td><td>open_gripper()</td></tr>
+            <tr><td><code>PLACE</code></td><td>placed</td><td><code>IDLE</code></td><td>return_home()</td></tr>
+            <tr><td><em>любое</em></td><td>fault</td><td><code>ERROR</code></td><td>emergency_stop()</td></tr>
+            <tr><td><code>ERROR</code></td><td>reset</td><td><code>IDLE</code></td><td>initialize()</td></tr>
+        </table>
+
+        <div class="schema">
+            <p style="font-size:.9em;color:var(--text2);margin-bottom:16px">Граф переходов (основной цикл):</p>
+            <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px">
+                <div class="fsm-state active" style="border-color:var(--green);width:70px;height:70px;font-size:.75em">IDLE</div>
+                <div style="color:var(--text2);font-size:.8em">→</div>
+                <div class="fsm-state" style="border-color:var(--accent);width:70px;height:70px;font-size:.75em">APPR.</div>
+                <div style="color:var(--text2);font-size:.8em">→</div>
+                <div class="fsm-state" style="border-color:var(--accent);width:70px;height:70px;font-size:.75em">GRIP</div>
+                <div style="color:var(--text2);font-size:.8em">→</div>
+                <div class="fsm-state" style="border-color:var(--accent);width:70px;height:70px;font-size:.75em">LIFT</div>
+                <div style="color:var(--text2);font-size:.8em">→</div>
+                <div class="fsm-state" style="border-color:var(--accent);width:70px;height:70px;font-size:.75em">MOVE</div>
+                <div style="color:var(--text2);font-size:.8em">→</div>
+                <div class="fsm-state" style="border-color:var(--accent);width:70px;height:70px;font-size:.75em">PLACE</div>
+                <div style="color:var(--text2);font-size:.8em">→ (цикл на IDLE)</div>
+            </div>
+            <p style="margin-top:16px;font-size:.85em;color:var(--orange)">Из любого состояния по событию <code>fault</code> → ERROR. Из ERROR по <code>reset</code> → IDLE.</p>
+        </div>
+
+        <!-- ============ РЕАЛИЗАЦИЯ ============ -->
+        <h2>Реализация в коде</h2>
+
+        <p>FSM — единственный формализм, который напрямую ложится в код. Три классических подхода:</p>
+
+        <h3>1. Switch-case (самый простой)</h3>
+
+        <pre><code>enum State { IDLE, APPROACH, GRIP, LIFT, MOVE, PLACE, ERROR };
+State state = IDLE;
+
+void handle_event(Event e) {
+    switch (state) {
+        case IDLE:
+            if (e == PART_DETECTED) {
+                move_to_pickup();
+                state = APPROACH;
+            }
+            break;
+        case APPROACH:
+            if (e == REACHED) {
+                close_gripper();
+                state = GRIP;
+            }
+            break;
+        // ... аналогично для остальных
+    }
+    // Глобальный переход в ERROR
+    if (e == FAULT) {
+        emergency_stop();
+        state = ERROR;
+    }
+}</code></pre>
+
+        <div class="card">
+            <p style="font-size:.9em"><strong>Плюсы:</strong> понятно, быстро, нулевой оверхед. <strong>Минусы:</strong> при 20+ состояниях switch превращается в спагетти. Нет формальной верификации.</p>
+        </div>
+
+        <h3>2. Таблица переходов (data-driven)</h3>
+
+        <pre><code># Python: таблица переходов как словарь
+transitions = {
+    ('IDLE',     'part_detected'): ('APPROACH', move_to_pickup),
+    ('APPROACH', 'reached'):       ('GRIP',     close_gripper),
+    ('GRIP',     'gripped'):       ('LIFT',     lift_arm),
+    ('LIFT',     'lifted'):        ('MOVE',     move_to_pallet),
+    ('MOVE',     'arrived'):       ('PLACE',    open_gripper),
+    ('PLACE',    'placed'):        ('IDLE',     return_home),
+}
+
+def handle(state, event):
+    key = (state, event)
+    if event == 'fault':
+        return 'ERROR', emergency_stop
+    if key in transitions:
+        next_state, action = transitions[key]
+        action()
+        return next_state, action
+    return state, None  # нет перехода — остаёмся</code></pre>
+
+        <div class="card">
+            <p style="font-size:.9em"><strong>Плюсы:</strong> таблицу можно загрузить из файла, визуализировать, проверить на полноту. <strong>Минусы:</strong> чуть больше абстракции.</p>
+        </div>
+
+        <h3>3. State Pattern (ООП)</h3>
+
+        <pre><code>class State:
+    def handle(self, event, context): pass
+
+class IdleState(State):
+    def handle(self, event, context):
+        if event == 'part_detected':
+            context.move_to_pickup()
+            return ApproachState()
+        return self
+
+class ApproachState(State):
+    def handle(self, event, context):
+        if event == 'reached':
+            context.close_gripper()
+            return GripState()
+        return self
+# ... каждое состояние — отдельный класс</code></pre>
+
+        <div class="card">
+            <p style="font-size:.9em"><strong>Плюсы:</strong> каждое состояние инкапсулировано, легко добавлять новые. <strong>Минусы:</strong> много классов, переходы размазаны по файлам.</p>
+        </div>
+
+        <!-- ============ АНАЛИЗ ============ -->
+        <h2>Анализ свойств FSM</h2>
+
+        <p>Для конечного автомата можно формально проверить:</p>
+
+        <div class="card">
+            <h3>Полнота</h3>
+            <p>Для каждой пары $(q, \sigma)$ определён переход? Если нет — система может «зависнуть», получив неожиданный вход.</p>
+            <p style="font-size:.85em;color:var(--text2)">Проверка: пройти по всем $|Q| \times |\Sigma|$ комбинациям. Сложность $O(|Q| \cdot |\Sigma|)$.</p>
+        </div>
+
+        <div class="card">
+            <h3>Достижимость</h3>
+            <p>Все ли состояния достижимы из $q_0$? Недостижимое состояние — мёртвый код.</p>
+            <p style="font-size:.85em;color:var(--text2)">Проверка: BFS/DFS из $q_0$ по графу переходов. Сложность $O(|Q| + |\delta|)$.</p>
+        </div>
+
+        <div class="card">
+            <h3>Отсутствие тупиков</h3>
+            <p>Есть ли состояния без исходящих переходов (кроме допускающих)? Тупик = система застряла.</p>
+            <p style="font-size:.85em;color:var(--text2)">В нашем примере: <code>ERROR</code> — не тупик, потому что из него есть переход по <code>reset</code>.</p>
+        </div>
+
+        <div class="card">
+            <h3>Минимизация</h3>
+            <p>Можно ли уменьшить число состояний без потери поведения? Алгоритм Хопкрофта находит минимальный DFA за $O(n \log n)$.</p>
+            <p style="font-size:.85em;color:var(--text2)">Два состояния эквивалентны, если для любой входной цепочки они дают одинаковый выход.</p>
+        </div>
+
+        <!-- ============ ОГРАНИЧЕНИЯ ============ -->
+        <h2>Ограничения FSM</h2>
+
+        <div class="card warn">
+            <p>FSM — мощный инструмент, но у него есть фундаментальные ограничения:</p>
+            <ol>
+                <li><strong>Взрыв состояний.</strong> Если система имеет $n$ независимых компонент с $k$ состояниями каждая, FSM потребует $k^n$ состояний (все комбинации). Два процесса по 10 состояний = 100 состояний в FSM.</li>
+                <li><strong>Нет параллелизма.</strong> FSM находится ровно в одном состоянии в каждый момент. Параллельные процессы нужно кодировать как декартово произведение — отсюда взрыв.</li>
+                <li><strong>Нет памяти.</strong> FSM не может считать (нет счётчиков, стеков). Он распознаёт ровно регулярные языки. Пример невозможного: «открыто ровно столько скобок, сколько закрыто» — для этого нужен как минимум автомат с магазинной памятью.</li>
+                <li><strong>Плоская структура.</strong> Нет иерархии, нет вложенности. При 50+ состояниях граф становится нечитаемым.</li>
+            </ol>
+        </div>
+
+        <p>Эти ограничения мотивируют расширения: <strong>Statecharts</strong> решают проблемы 2 и 4, <strong>сети Петри</strong> — проблемы 1, 2 и 3.</p>
+
+        <!-- ============ ВЫРАЗИТЕЛЬНОСТЬ ============ -->
+        <h2>Выразительность: иерархия Хомского</h2>
+
+        <div class="card">
+            <p>FSM распознают в точности <strong>регулярные языки</strong> (тип 3 по Хомскому). Это самый нижний уровень иерархии:</p>
+            <table>
+                <tr><th>Тип</th><th>Грамматика</th><th>Автомат</th><th>Пример</th></tr>
+                <tr><td>3</td><td>Регулярная</td><td><strong>FSM</strong></td><td>$a^*b$ — любое число $a$, затем $b$</td></tr>
+                <tr><td>2</td><td>Контекстно-свободная</td><td>Автомат с магазинной памятью</td><td>$a^n b^n$ — скобки</td></tr>
+                <tr><td>1</td><td>Контекстно-зависимая</td><td>Линейно ограниченный автомат</td><td>$a^n b^n c^n$</td></tr>
+                <tr><td>0</td><td>Рекурсивно перечислимая</td><td>Машина Тьюринга</td><td>Всё вычислимое</td></tr>
+            </table>
+            <p style="font-size:.85em;color:var(--text2);margin-top:10px">Сети Петри по выразительности находятся строго между типом 3 и типом 0 — они мощнее FSM, но слабее машины Тьюринга.</p>
+        </div>
+
+        <!-- ============ ДАЛЬШЕ ============ -->
+        <h2>Дальше</h2>
+
+        <div class="card success">
+            <p>FSM — фундамент, но для параллельных систем и ресурсов он слаб. Переходим к <a href="3-petri-nets.html" style="color:var(--green);font-weight:600">сетям Петри</a> — формализму, который решает главные проблемы FSM: параллелизм, синхронизацию и ресурсы.</p>
+        </div>
+    </div>
+</body>
+</html>

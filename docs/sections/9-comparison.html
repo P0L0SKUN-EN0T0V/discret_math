@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>9. Сравнение и выбор формализма</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+    <style>
+        :root{--bg:#0f1117;--card:#1a1d2e;--border:#2a2d3e;--accent:#6c9eff;--accent2:#a78bfa;--green:#4ade80;--orange:#fb923c;--red:#f87171;--text:#e2e8f0;--text2:#94a3b8;--sidebar:#151825}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.8;display:flex;min-height:100vh}
+        .sidebar{width:260px;background:var(--sidebar);border-right:1px solid var(--border);padding:20px 0;position:fixed;height:100vh;overflow-y:auto}
+        .sidebar::-webkit-scrollbar{width:6px}
+        .sidebar::-webkit-scrollbar-track{background:var(--sidebar)}
+        .sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        .sidebar{scrollbar-width:thin;scrollbar-color:var(--border) var(--sidebar)}
+        .sidebar h3{color:var(--accent);padding:0 20px;margin-bottom:16px;font-size:1em}
+        .sidebar a{display:block;padding:8px 20px;color:var(--text2);text-decoration:none;font-size:.9em;border-left:3px solid transparent;transition:all .2s}
+        .sidebar a:hover{background:rgba(108,158,255,.08);color:var(--text)}
+        .sidebar a.active{border-left-color:var(--accent);color:var(--accent);background:rgba(108,158,255,.1)}
+        .sidebar .sep{height:1px;background:var(--border);margin:12px 20px}
+        .sidebar .section-title{color:var(--text2);font-size:.75em;text-transform:uppercase;letter-spacing:1px;padding:12px 20px 4px;font-weight:600}
+        .main{margin-left:260px;padding:48px 40px;max-width:920px;width:100%}
+        h1{font-size:2.1em;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+        .subtitle{color:var(--text2);margin-bottom:36px;font-size:1.05em}
+        h2{font-size:1.4em;color:var(--accent);margin:44px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        h3{font-size:1.1em;color:var(--accent2);margin:28px 0 12px}
+        p{margin:10px 0}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin:16px 0}
+        .card.highlight{border-left:4px solid var(--accent)}
+        .card.warn{border-left:4px solid var(--orange)}
+        .card.success{border-left:4px solid var(--green)}
+        .tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.8em;font-weight:600;margin:2px 4px 2px 0}
+        .tag.blue{background:rgba(108,158,255,.15);color:var(--accent)}
+        .tag.green{background:rgba(74,222,128,.15);color:var(--green)}
+        .tag.orange{background:rgba(251,146,60,.15);color:var(--orange)}
+        .tag.purple{background:rgba(167,139,250,.15);color:var(--accent2)}
+        ul,ol{padding-left:24px;margin:10px 0}li{margin:8px 0}
+        code{background:rgba(108,158,255,.1);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:.9em}
+        pre{background:#141620;border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:.85em;margin:14px 0;line-height:1.6}
+        table{width:100%;border-collapse:collapse;margin:12px 0}
+        th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+        th{color:var(--accent);font-weight:600}
+        td{font-size:.9em}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .schema{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:32px 24px;margin:20px 0;text-align:center}
+        .num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:rgba(108,158,255,.15);color:var(--accent);font-weight:700;font-size:.85em;margin-right:8px}
+        @media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:24px 16px}}
+        @media(max-width:700px){.grid{grid-template-columns:1fr}}
+        @media print{body{display:block}.sidebar{display:none}.main{margin-left:0}body{background:#fff;color:#1a1a1a}.card{background:#f9f9f9;border-color:#ddd}h1{-webkit-text-fill-color:#2563eb}h2{color:#2563eb}h3{color:#7c3aed}code{background:#f0f0f0;color:#2563eb}pre{background:#f5f5f5;border-color:#ddd}}
+    </style>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar"></nav>
+    <script src="../nav.js"></script>
+
+    <div class="main">
+        <h1>Сравнение и выбор формализма</h1>
+        <p class="subtitle">Какой инструмент для какой задачи — итоговая таблица и дерево решений</p>
+
+        <!-- ============ БОЛЬШАЯ ТАБЛИЦА ============ -->
+        <h2>Сравнительная таблица</h2>
+
+        <div style="overflow-x:auto">
+        <table>
+            <tr>
+                <th></th>
+                <th>FSM</th>
+                <th>Сети Петри</th>
+                <th>Statecharts</th>
+                <th>TPN</th>
+                <th>BT</th>
+                <th>GRAFCET</th>
+            </tr>
+            <tr>
+                <td><strong>Параллелизм</strong></td>
+                <td><span class="tag orange">нет</span></td>
+                <td><span class="tag green">да</span></td>
+                <td><span class="tag green">да</span></td>
+                <td><span class="tag green">да</span></td>
+                <td><span class="tag blue">ограниченный</span></td>
+                <td><span class="tag green">да</span></td>
+            </tr>
+            <tr>
+                <td><strong>Иерархия</strong></td>
+                <td><span class="tag orange">нет</span></td>
+                <td><span class="tag orange">нет*</span></td>
+                <td><span class="tag green">да</span></td>
+                <td><span class="tag orange">нет*</span></td>
+                <td><span class="tag green">да</span></td>
+                <td><span class="tag blue">ограниченная</span></td>
+            </tr>
+            <tr>
+                <td><strong>Время</strong></td>
+                <td><span class="tag orange">нет</span></td>
+                <td><span class="tag orange">нет</span></td>
+                <td><span class="tag blue">через guard</span></td>
+                <td><span class="tag green">да</span></td>
+                <td><span class="tag blue">через decorator</span></td>
+                <td><span class="tag blue">таймеры</span></td>
+            </tr>
+            <tr>
+                <td><strong>Ресурсы</strong></td>
+                <td><span class="tag orange">нет</span></td>
+                <td><span class="tag green">да (токены)</span></td>
+                <td><span class="tag orange">нет</span></td>
+                <td><span class="tag green">да</span></td>
+                <td><span class="tag orange">нет</span></td>
+                <td><span class="tag blue">через шаги</span></td>
+            </tr>
+            <tr>
+                <td><strong>Модульность</strong></td>
+                <td><span class="tag orange">низкая</span></td>
+                <td><span class="tag blue">средняя</span></td>
+                <td><span class="tag green">высокая</span></td>
+                <td><span class="tag blue">средняя</span></td>
+                <td><span class="tag green">высокая</span></td>
+                <td><span class="tag blue">средняя</span></td>
+            </tr>
+            <tr>
+                <td><strong>Формальный анализ</strong></td>
+                <td><span class="tag green">полный</span></td>
+                <td><span class="tag green">развитый</span></td>
+                <td><span class="tag blue">средний</span></td>
+                <td><span class="tag green">развитый</span></td>
+                <td><span class="tag orange">базовый</span></td>
+                <td><span class="tag blue">через PN</span></td>
+            </tr>
+            <tr>
+                <td><strong>Простота</strong></td>
+                <td><span class="tag green">высокая</span></td>
+                <td><span class="tag blue">средняя</span></td>
+                <td><span class="tag blue">средняя</span></td>
+                <td><span class="tag orange">низкая</span></td>
+                <td><span class="tag green">высокая</span></td>
+                <td><span class="tag green">высокая</span></td>
+            </tr>
+            <tr>
+                <td><strong>Реализация</strong></td>
+                <td><span class="tag green">прямая</span></td>
+                <td><span class="tag blue">движок</span></td>
+                <td><span class="tag green">кодогенерация</span></td>
+                <td><span class="tag blue">движок</span></td>
+                <td><span class="tag green">библиотека</span></td>
+                <td><span class="tag green">ПЛК-среда</span></td>
+            </tr>
+        </table>
+        </div>
+
+        <p style="font-size:.85em;color:var(--text2)">* Иерархические и цветные сети Петри существуют как расширения, но не входят в базовую модель.</p>
+
+        <!-- ============ ДЕРЕВО РЕШЕНИЙ ============ -->
+        <h2>Дерево решений: какой формализм выбрать</h2>
+
+        <div class="card highlight">
+            <div style="font-family:monospace;font-size:.9em;line-height:2.2">
+                <span style="color:var(--accent)">Задача?</span><br>
+                ├─ <span style="color:var(--text2)">Последовательная логика, ≤15 состояний</span> → <span style="color:var(--green)"><strong>FSM</strong></span><br>
+                ├─ <span style="color:var(--text2)">Параллельные процессы + разделяемые ресурсы</span> → <span style="color:var(--green)"><strong>Сети Петри</strong></span><br>
+                ├─ <span style="color:var(--text2)">Сложная иерархия режимов (UML, встраиваемые)</span> → <span style="color:var(--green)"><strong>Statecharts</strong></span><br>
+                ├─ <span style="color:var(--text2)">Анализ производительности, пропускной способности</span> → <span style="color:var(--green)"><strong>TPN / SPN</strong></span><br>
+                ├─ <span style="color:var(--text2)">Поведение робота / NPC (модульное, расширяемое)</span> → <span style="color:var(--green)"><strong>BT</strong></span><br>
+                ├─ <span style="color:var(--text2)">Программирование ПЛК, промышленная автоматика</span> → <span style="color:var(--green)"><strong>GRAFCET / SFC</strong></span><br>
+                ├─ <span style="color:var(--text2)">Вероятностный анализ, надёжность</span> → <span style="color:var(--green)"><strong>Цепи Маркова</strong></span><br>
+                ├─ <span style="color:var(--text2)">Верификация протоколов, формальные доказательства</span> → <span style="color:var(--green)"><strong>CSP / CCS</strong></span><br>
+                ├─ <span style="color:var(--text2)">Дискретно-непрерывные системы (hybrid)</span> → <span style="color:var(--green)"><strong>Гибридные автоматы</strong></span><br>
+                └─ <span style="color:var(--text2)">Real-time с верификацией дедлайнов</span> → <span style="color:var(--green)"><strong>Timed Automata (UPPAAL)</strong></span>
+            </div>
+        </div>
+
+        <!-- ============ ПО ОБЛАСТЯМ ============ -->
+        <h2>По областям применения</h2>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Робототехника</h3>
+                <ol>
+                    <li><strong>BT</strong> — поведение, mission planning</li>
+                    <li><strong>FSM / Statecharts</strong> — режимы работы</li>
+                    <li><strong>Гибридные автоматы</strong> — контакт/бесконтакт</li>
+                </ol>
+            </div>
+            <div class="card">
+                <h3>Промышленная автоматика</h3>
+                <ol>
+                    <li><strong>GRAFCET/SFC</strong> — основной язык</li>
+                    <li><strong>Сети Петри</strong> — анализ безопасности</li>
+                    <li><strong>TPN</strong> — оптимизация циклов</li>
+                </ol>
+            </div>
+            <div class="card">
+                <h3>Встраиваемые системы</h3>
+                <ol>
+                    <li><strong>Statecharts</strong> — Stateflow, кодогенерация</li>
+                    <li><strong>FSM</strong> — простые контроллеры</li>
+                    <li><strong>Timed Automata</strong> — верификация</li>
+                </ol>
+            </div>
+            <div class="card">
+                <h3>IT / Серверная инфраструктура</h3>
+                <ol>
+                    <li><strong>Queueing Networks</strong> — capacity planning</li>
+                    <li><strong>Цепи Маркова</strong> — SLA, надёжность</li>
+                    <li><strong>Сети Петри</strong> — workflow, BPMN</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- ============ ВЫРАЗИТЕЛЬНОСТЬ ============ -->
+        <h2>Иерархия выразительности</h2>
+
+        <div class="schema">
+            <div style="display:flex;flex-direction:column;gap:12px;align-items:center;max-width:500px;margin:0 auto">
+                <div style="border:2px solid var(--red);border-radius:8px;padding:12px 24px;width:100%;background:rgba(248,113,113,.05)">
+                    <strong style="color:var(--red)">Машина Тьюринга</strong>
+                    <span style="font-size:.8em;color:var(--text2)">— всё вычислимое</span>
+                </div>
+                <div style="color:var(--text2);font-size:.8em">⊃ строго мощнее</div>
+                <div style="border:2px solid var(--orange);border-radius:8px;padding:12px 24px;width:90%;background:rgba(251,146,60,.05)">
+                    <strong style="color:var(--orange)">Сети Петри + ингибиторные дуги</strong>
+                    <span style="font-size:.8em;color:var(--text2)">= Тьюринг-полные</span>
+                </div>
+                <div style="color:var(--text2);font-size:.8em">⊃</div>
+                <div style="border:2px solid var(--accent);border-radius:8px;padding:12px 24px;width:80%;background:rgba(108,158,255,.05)">
+                    <strong style="color:var(--accent)">Сети Петри (классические)</strong>
+                    <span style="font-size:.8em;color:var(--text2)">— строго между</span>
+                </div>
+                <div style="color:var(--text2);font-size:.8em">⊃</div>
+                <div style="border:2px solid var(--green);border-radius:8px;padding:12px 24px;width:70%;background:rgba(74,222,128,.05)">
+                    <strong style="color:var(--green)">FSM / Statecharts / BT / GRAFCET</strong>
+                    <span style="font-size:.8em;color:var(--text2)">— регулярные языки</span>
+                </div>
+            </div>
+            <p style="font-size:.85em;color:var(--text2);margin-top:16px">Statecharts и BT эквивалентны FSM по выразительности (те же регулярные языки), но экспоненциально компактнее в записи.</p>
+        </div>
+
+        <!-- ============ ПРАКТИЧЕСКИЕ СОВЕТЫ ============ -->
+        <h2>Практические рекомендации</h2>
+
+        <div class="card success">
+            <ol>
+                <li><strong>Начинай с FSM.</strong> Если хватает — не усложняй. FSM покрывает 80% задач.</li>
+                <li><strong>Перешёл 15 состояний?</strong> Подумай о Statecharts (иерархия) или BT (модульность).</li>
+                <li><strong>Есть параллелизм + ресурсы?</strong> Сети Петри — единственный формализм, который это делает естественно.</li>
+                <li><strong>Нужна производительность?</strong> TPN или SPN для количественного анализа.</li>
+                <li><strong>Промышленный контроллер?</strong> GRAFCET/SFC — стандарт, который понимает любой автоматчик.</li>
+                <li><strong>Комбинируй.</strong> BT для верхнего уровня + FSM для отдельных поведений — стандарт в робототехнике.</li>
+            </ol>
+        </div>
+
+        <!-- ============ ИТОГ ============ -->
+        <h2>Итог</h2>
+
+        <div class="card highlight">
+            <p>Формализмы моделирования — это не академическая абстракция, а рабочие инструменты инженера. Каждый решает свой класс задач:</p>
+            <ul>
+                <li><strong>FSM</strong> — простая последовательная логика</li>
+                <li><strong>Сети Петри</strong> — параллелизм и ресурсы</li>
+                <li><strong>Statecharts</strong> — сложная иерархия режимов</li>
+                <li><strong>TPN/SPN</strong> — анализ производительности</li>
+                <li><strong>BT</strong> — модульное поведение агентов</li>
+                <li><strong>GRAFCET</strong> — промышленная автоматика</li>
+            </ul>
+            <p style="margin-top:12px">Выбор формализма — это как выбор языка программирования: нет «лучшего», есть подходящий для задачи. Главное — знать, что существует, и уметь выбрать.</p>
+        </div>
+    </div>
+</body>
+</html>

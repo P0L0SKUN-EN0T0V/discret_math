@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7. GRAFCET / SFC</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+    <style>
+        :root{--bg:#0f1117;--card:#1a1d2e;--border:#2a2d3e;--accent:#6c9eff;--accent2:#a78bfa;--green:#4ade80;--orange:#fb923c;--red:#f87171;--text:#e2e8f0;--text2:#94a3b8;--sidebar:#151825}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.8;display:flex;min-height:100vh}
+        .sidebar{width:260px;background:var(--sidebar);border-right:1px solid var(--border);padding:20px 0;position:fixed;height:100vh;overflow-y:auto}
+        .sidebar::-webkit-scrollbar{width:6px}
+        .sidebar::-webkit-scrollbar-track{background:var(--sidebar)}
+        .sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        .sidebar{scrollbar-width:thin;scrollbar-color:var(--border) var(--sidebar)}
+        .sidebar h3{color:var(--accent);padding:0 20px;margin-bottom:16px;font-size:1em}
+        .sidebar a{display:block;padding:8px 20px;color:var(--text2);text-decoration:none;font-size:.9em;border-left:3px solid transparent;transition:all .2s}
+        .sidebar a:hover{background:rgba(108,158,255,.08);color:var(--text)}
+        .sidebar a.active{border-left-color:var(--accent);color:var(--accent);background:rgba(108,158,255,.1)}
+        .sidebar .sep{height:1px;background:var(--border);margin:12px 20px}
+        .sidebar .section-title{color:var(--text2);font-size:.75em;text-transform:uppercase;letter-spacing:1px;padding:12px 20px 4px;font-weight:600}
+        .main{margin-left:260px;padding:48px 40px;max-width:920px;width:100%}
+        h1{font-size:2.1em;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+        .subtitle{color:var(--text2);margin-bottom:36px;font-size:1.05em}
+        h2{font-size:1.4em;color:var(--accent);margin:44px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        h3{font-size:1.1em;color:var(--accent2);margin:28px 0 12px}
+        p{margin:10px 0}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin:16px 0}
+        .card.highlight{border-left:4px solid var(--accent)}
+        .card.warn{border-left:4px solid var(--orange)}
+        .card.success{border-left:4px solid var(--green)}
+        .tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.8em;font-weight:600;margin:2px 4px 2px 0}
+        .tag.blue{background:rgba(108,158,255,.15);color:var(--accent)}
+        .tag.green{background:rgba(74,222,128,.15);color:var(--green)}
+        .tag.orange{background:rgba(251,146,60,.15);color:var(--orange)}
+        .tag.purple{background:rgba(167,139,250,.15);color:var(--accent2)}
+        ul,ol{padding-left:24px;margin:10px 0}li{margin:8px 0}
+        code{background:rgba(108,158,255,.1);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:.9em}
+        pre{background:#141620;border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:.85em;margin:14px 0;line-height:1.6}
+        table{width:100%;border-collapse:collapse;margin:12px 0}
+        th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+        th{color:var(--accent);font-weight:600}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .schema{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:32px 24px;margin:20px 0;text-align:center}
+        .num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:rgba(108,158,255,.15);color:var(--accent);font-weight:700;font-size:.85em;margin-right:8px}
+        .sfc-step{display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--accent);padding:10px 20px;font-weight:600;font-size:.85em;min-width:120px}
+        .sfc-step.active{border-width:4px}
+        .sfc-trans{display:inline-block;width:30px;height:4px;background:var(--orange)}
+        @media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:24px 16px}}
+        @media(max-width:700px){.grid{grid-template-columns:1fr}}
+        @media print{body{display:block}.sidebar{display:none}.main{margin-left:0}body{background:#fff;color:#1a1a1a}.card{background:#f9f9f9;border-color:#ddd}h1{-webkit-text-fill-color:#2563eb}h2{color:#2563eb}h3{color:#7c3aed}code{background:#f0f0f0;color:#2563eb}pre{background:#f5f5f5;border-color:#ddd}}
+    </style>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar"></nav>
+    <script src="../nav.js"></script>
+
+    <div class="main">
+        <h1>GRAFCET / SFC</h1>
+        <p class="subtitle">Стандарт IEC 61131-3 для программирования промышленных контроллеров</p>
+
+        <!-- ============ ЧТО ЭТО ============ -->
+        <h2>Что это</h2>
+
+        <div class="card highlight">
+            <p><strong>GRAFCET</strong> (GRAphe Fonctionnel de Commande Étape-Transition) — графический язык, разработанный во Франции в 1977 году для описания последовательного управления в промышленности. Стандартизован как <strong>IEC 60848</strong>.</p>
+            <p style="margin-top:10px"><strong>SFC</strong> (Sequential Function Chart) — его программная реализация в стандарте <strong>IEC 61131-3</strong> для ПЛК (программируемых логических контроллеров). По сути это GRAFCET, адаптированный для прямого выполнения на контроллере.</p>
+        </div>
+
+        <p>GRAFCET — это специализированный потомок сетей Петри, заточенный под промышленную автоматику. Из сетей Петри он унаследовал параллельные ветви и синхронизацию, но упростил и регламентировал всё остальное.</p>
+
+        <!-- ============ ЭЛЕМЕНТЫ ============ -->
+        <h2>Элементы GRAFCET</h2>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Шаг (étape / step)</h3>
+                <p>Прямоугольник с номером. Может быть <strong>активным</strong> или <strong>неактивным</strong>. К активному шагу привязаны действия, которые выполняются.</p>
+                <p style="font-size:.85em;color:var(--text2)">Начальный шаг выделяется двойной рамкой.</p>
+            </div>
+            <div class="card">
+                <h3>Переход (transition)</h3>
+                <p>Горизонтальная чёрточка между шагами. Переход срабатывает, когда: (1) все предшествующие шаги активны И (2) условие перехода истинно.</p>
+                <p style="font-size:.85em;color:var(--text2)">Условие — логическое выражение от входов контроллера.</p>
+            </div>
+            <div class="card">
+                <h3>Действие (action)</h3>
+                <p>Привязано к шагу. Типы: <strong>N</strong> (пока шаг активен), <strong>S</strong> (set — установить), <strong>R</strong> (reset — сбросить), <strong>P</strong> (импульс при активации), <strong>D</strong> (с задержкой), <strong>L</strong> (ограниченное по времени).</p>
+            </div>
+            <div class="card">
+                <h3>Параллельные ветви</h3>
+                <p>Двойная горизонтальная линия = <strong>fork</strong> (разветвление) или <strong>join</strong> (синхронизация). Все ветви между fork и join выполняются параллельно.</p>
+            </div>
+        </div>
+
+        <!-- ============ ПРИМЕР ============ -->
+        <h2>Пример: автоматический пресс</h2>
+
+        <div class="schema">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin:0 auto;max-width:300px">
+                <div class="sfc-step active">S0: Ожидание</div>
+                <div style="font-size:.8em;color:var(--orange)">── кнопка «Старт» ──</div>
+                <div class="sfc-step">S1: Подача детали</div>
+                <div style="font-size:.8em;color:var(--orange)">── датчик «деталь на месте» ──</div>
+                <div class="sfc-step">S2: Прессование</div>
+                <div style="font-size:.8em;color:var(--orange)">── таймер 5с истёк ──</div>
+                <div class="sfc-step">S3: Подъём пресса</div>
+                <div style="font-size:.8em;color:var(--orange)">── датчик «пресс вверху» ──</div>
+                <div class="sfc-step">S4: Выгрузка</div>
+                <div style="font-size:.8em;color:var(--orange)">── деталь убрана ──</div>
+                <div style="font-size:.8em;color:var(--text2)">↩ возврат в S0</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <p><strong>Действия, привязанные к шагам:</strong></p>
+            <table>
+                <tr><th>Шаг</th><th>Действие</th><th>Тип</th></tr>
+                <tr><td>S0</td><td>Индикатор «Готов» = ON</td><td>N (пока активен)</td></tr>
+                <tr><td>S1</td><td>Конвейер подачи = ON</td><td>N</td></tr>
+                <tr><td>S2</td><td>Цилиндр пресса = DOWN; Запустить таймер 5с</td><td>N; D(5s)</td></tr>
+                <tr><td>S3</td><td>Цилиндр пресса = UP</td><td>N</td></tr>
+                <tr><td>S4</td><td>Конвейер выгрузки = ON</td><td>N</td></tr>
+            </table>
+        </div>
+
+        <!-- ============ ПАРАЛЛЕЛЬНЫЕ ВЕТВИ ============ -->
+        <h2>Параллельные ветви</h2>
+
+        <div class="card highlight">
+            <p>GRAFCET поддерживает <strong>одновременное выполнение</strong> нескольких ветвей — это прямое наследие сетей Петри. При срабатывании перехода перед fork все ветви активируются одновременно. Join ждёт завершения ВСЕХ ветвей.</p>
+        </div>
+
+        <div class="schema">
+            <div style="text-align:left;max-width:500px;margin:0 auto;font-family:monospace;font-size:.9em;line-height:2">
+                <span style="color:var(--accent)">S0: Старт</span><br>
+                <span style="color:var(--orange)">════════════════ (fork)</span><br>
+                <span style="color:var(--green)">&nbsp;S1: Нагреть &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;S2: Подать газ</span><br>
+                <span style="color:var(--green)">&nbsp;S3: Ждать 60°C &nbsp;&nbsp;S4: Ждать давление</span><br>
+                <span style="color:var(--orange)">════════════════ (join)</span><br>
+                <span style="color:var(--accent)">S5: Начать процесс</span>
+            </div>
+            <p style="font-size:.85em;color:var(--text2);margin-top:12px">S5 активируется только когда И температура достигнута, И давление достигнуто</p>
+        </div>
+
+        <!-- ============ СВЯЗЬ С СЕТЯМИ ПЕТРИ ============ -->
+        <h2>Связь с сетями Петри</h2>
+
+        <div class="card">
+            <p>GRAFCET — это <strong>безопасная (safe) сеть Петри</strong> с ограничениями:</p>
+            <table>
+                <tr><th>Сети Петри</th><th>GRAFCET</th></tr>
+                <tr><td>Места</td><td>Шаги</td></tr>
+                <tr><td>Переходы</td><td>Переходы с условиями</td></tr>
+                <tr><td>Токены</td><td>Активные шаги (макс. 1 токен на шаг)</td></tr>
+                <tr><td>Произвольная топология</td><td>Чередование шаг-переход-шаг</td></tr>
+                <tr><td>Веса дуг</td><td>Всегда 1</td></tr>
+                <tr><td>Нет действий</td><td>Действия привязаны к шагам</td></tr>
+            </table>
+            <p style="font-size:.85em;color:var(--text2);margin-top:10px">Ограничения GRAFCET гарантируют, что все свойства (достижимость, живость, ограниченность) проверяются эффективно.</p>
+        </div>
+
+        <!-- ============ IEC 61131-3 ============ -->
+        <h2>SFC в стандарте IEC 61131-3</h2>
+
+        <div class="card">
+            <p>IEC 61131-3 определяет <strong>пять языков</strong> программирования ПЛК:</p>
+            <ol>
+                <li><strong>SFC</strong> — Sequential Function Chart (= GRAFCET) — структура программы</li>
+                <li><strong>LD</strong> — Ladder Diagram — релейные схемы</li>
+                <li><strong>FBD</strong> — Function Block Diagram — функциональные блоки</li>
+                <li><strong>ST</strong> — Structured Text — текстовый (похож на Pascal)</li>
+                <li><strong>IL</strong> — Instruction List — ассемблер (устарел)</li>
+            </ol>
+            <p style="margin-top:10px">SFC — это «верхний уровень», а действия внутри шагов пишутся на любом из остальных четырёх языков. Типичная комбинация: <strong>SFC для логики + ST для вычислений</strong>.</p>
+        </div>
+
+        <!-- ============ ИНСТРУМЕНТЫ ============ -->
+        <h2>Инструменты</h2>
+
+        <div class="grid">
+            <div class="card">
+                <h3>CODESYS</h3>
+                <p style="font-size:.9em;color:var(--text2)">Бесплатная IDE для программирования ПЛК. Полная поддержка IEC 61131-3, включая SFC. Симулятор.</p>
+            </div>
+            <div class="card">
+                <h3>Siemens TIA Portal</h3>
+                <p style="font-size:.9em;color:var(--text2)">Промышленный стандарт для Siemens S7. GRAPH (аналог SFC) + LAD + SCL.</p>
+            </div>
+            <div class="card">
+                <h3>OpenPLC</h3>
+                <p style="font-size:.9em;color:var(--text2)">Open-source ПЛК на Raspberry Pi / Arduino. Поддержка SFC через OpenPLC Editor.</p>
+            </div>
+            <div class="card">
+                <h3>Beremiz</h3>
+                <p style="font-size:.9em;color:var(--text2)">Open-source IDE (Python). Все 5 языков IEC 61131-3, экспорт в C-код.</p>
+            </div>
+        </div>
+
+        <!-- ============ ДАЛЬШЕ ============ -->
+        <h2>Дальше</h2>
+
+        <div class="card success">
+            <p>Мы рассмотрели основные формализмы. Переходим к <a href="8-others.html" style="color:var(--green);font-weight:600">обзору остальных формализмов</a> — цепи Маркова, алгебры процессов, клеточные автоматы и другие.</p>
+        </div>
+    </div>
+</body>
+</html>

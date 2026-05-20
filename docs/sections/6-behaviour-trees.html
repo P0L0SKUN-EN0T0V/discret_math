@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6. Деревья поведения (Behaviour Trees)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+    <style>
+        :root{--bg:#0f1117;--card:#1a1d2e;--border:#2a2d3e;--accent:#6c9eff;--accent2:#a78bfa;--green:#4ade80;--orange:#fb923c;--red:#f87171;--text:#e2e8f0;--text2:#94a3b8;--sidebar:#151825}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.8;display:flex;min-height:100vh}
+        .sidebar{width:260px;background:var(--sidebar);border-right:1px solid var(--border);padding:20px 0;position:fixed;height:100vh;overflow-y:auto}
+        .sidebar::-webkit-scrollbar{width:6px}
+        .sidebar::-webkit-scrollbar-track{background:var(--sidebar)}
+        .sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        .sidebar{scrollbar-width:thin;scrollbar-color:var(--border) var(--sidebar)}
+        .sidebar h3{color:var(--accent);padding:0 20px;margin-bottom:16px;font-size:1em}
+        .sidebar a{display:block;padding:8px 20px;color:var(--text2);text-decoration:none;font-size:.9em;border-left:3px solid transparent;transition:all .2s}
+        .sidebar a:hover{background:rgba(108,158,255,.08);color:var(--text)}
+        .sidebar a.active{border-left-color:var(--accent);color:var(--accent);background:rgba(108,158,255,.1)}
+        .sidebar .sep{height:1px;background:var(--border);margin:12px 20px}
+        .sidebar .section-title{color:var(--text2);font-size:.75em;text-transform:uppercase;letter-spacing:1px;padding:12px 20px 4px;font-weight:600}
+        .main{margin-left:260px;padding:48px 40px;max-width:920px;width:100%}
+        h1{font-size:2.1em;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+        .subtitle{color:var(--text2);margin-bottom:36px;font-size:1.05em}
+        h2{font-size:1.4em;color:var(--accent);margin:44px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        h3{font-size:1.1em;color:var(--accent2);margin:28px 0 12px}
+        p{margin:10px 0}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin:16px 0}
+        .card.highlight{border-left:4px solid var(--accent)}
+        .card.warn{border-left:4px solid var(--orange)}
+        .card.success{border-left:4px solid var(--green)}
+        .tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.8em;font-weight:600;margin:2px 4px 2px 0}
+        .tag.blue{background:rgba(108,158,255,.15);color:var(--accent)}
+        .tag.green{background:rgba(74,222,128,.15);color:var(--green)}
+        .tag.orange{background:rgba(251,146,60,.15);color:var(--orange)}
+        .tag.purple{background:rgba(167,139,250,.15);color:var(--accent2)}
+        ul,ol{padding-left:24px;margin:10px 0}li{margin:8px 0}
+        code{background:rgba(108,158,255,.1);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:.9em}
+        pre{background:#141620;border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:.85em;margin:14px 0;line-height:1.6}
+        table{width:100%;border-collapse:collapse;margin:12px 0}
+        th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+        th{color:var(--accent);font-weight:600}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .schema{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:32px 24px;margin:20px 0;text-align:center}
+        .num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:rgba(108,158,255,.15);color:var(--accent);font-weight:700;font-size:.85em;margin-right:8px}
+        .bt-node{display:inline-flex;align-items:center;justify-content:center;padding:8px 16px;border-radius:8px;font-size:.85em;font-weight:600;border:2px solid}
+        @media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:24px 16px}}
+        @media(max-width:700px){.grid{grid-template-columns:1fr}}
+        @media print{body{display:block}.sidebar{display:none}.main{margin-left:0}body{background:#fff;color:#1a1a1a}.card{background:#f9f9f9;border-color:#ddd}h1{-webkit-text-fill-color:#2563eb}h2{color:#2563eb}h3{color:#7c3aed}code{background:#f0f0f0;color:#2563eb}pre{background:#f5f5f5;border-color:#ddd}}
+    </style>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar"></nav>
+    <script src="../nav.js"></script>
+
+    <div class="main">
+        <h1>Деревья поведения</h1>
+        <p class="subtitle">Behaviour Trees (BT) — модульный формализм из робототехники и геймдева</p>
+
+        <!-- ============ ЗАЧЕМ ============ -->
+        <h2>Зачем ещё один формализм</h2>
+
+        <p>FSM для сложного поведения (робот, NPC в игре) быстро превращается в «спагетти из стрелок»: каждое новое поведение требует переходов из каждого состояния. Добавил «подзарядку батареи»? Рисуй переход из всех 15 состояний.</p>
+
+        <div class="card highlight">
+            <p>Деревья поведения решают эту проблему через <strong>модульность</strong>: поведения — независимые поддеревья, которые можно добавлять, убирать и комбинировать без переписывания остального.</p>
+        </div>
+
+        <!-- ============ КАК РАБОТАЕТ ============ -->
+        <h2>Как работает BT</h2>
+
+        <p>BT — это <strong>дерево</strong>, которое обходится (tick) с заданной частотой (например, 10 Гц). Каждый узел при tick возвращает один из трёх статусов:</p>
+
+        <div class="grid" style="grid-template-columns:1fr 1fr 1fr">
+            <div class="card" style="text-align:center">
+                <div class="bt-node" style="border-color:var(--green);color:var(--green)">SUCCESS</div>
+                <p style="font-size:.85em;color:var(--text2);margin-top:8px">Задача выполнена</p>
+            </div>
+            <div class="card" style="text-align:center">
+                <div class="bt-node" style="border-color:var(--red);color:var(--red)">FAILURE</div>
+                <p style="font-size:.85em;color:var(--text2);margin-top:8px">Задача не удалась</p>
+            </div>
+            <div class="card" style="text-align:center">
+                <div class="bt-node" style="border-color:var(--orange);color:var(--orange)">RUNNING</div>
+                <p style="font-size:.85em;color:var(--text2);margin-top:8px">Задача в процессе</p>
+            </div>
+        </div>
+
+        <!-- ============ ТИПЫ УЗЛОВ ============ -->
+        <h2>Типы узлов</h2>
+
+        <h3>Составные (composite) — управляют потоком</h3>
+
+        <div class="card">
+            <h3>→ Sequence (последовательность)</h3>
+            <p>Выполняет детей <strong>слева направо</strong>. Если ребёнок вернул SUCCESS — переходит к следующему. Если FAILURE — сразу возвращает FAILURE. Если RUNNING — возвращает RUNNING.</p>
+            <p style="font-size:.85em;color:var(--text2)">Аналогия: логическое AND. «Подойти к двери И открыть И пройти» — если что-то не вышло, вся последовательность провалена.</p>
+        </div>
+
+        <div class="card">
+            <h3>? Fallback / Selector (выбор)</h3>
+            <p>Выполняет детей <strong>слева направо</strong>. Если ребёнок вернул FAILURE — переходит к следующему. Если SUCCESS — сразу возвращает SUCCESS. Если RUNNING — возвращает RUNNING.</p>
+            <p style="font-size:.85em;color:var(--text2)">Аналогия: логическое OR. «Открыть ключом ИЛИ взломать ИЛИ найти другой вход» — пробуем альтернативы.</p>
+        </div>
+
+        <div class="card">
+            <h3>⇉ Parallel (параллельный)</h3>
+            <p>Выполняет <strong>всех</strong> детей одновременно. Политика успеха: все SUCCESS (AND), хотя бы один SUCCESS (OR), или M из N.</p>
+            <p style="font-size:.85em;color:var(--text2)">Пример: «двигаться к цели» параллельно с «следить за препятствиями».</p>
+        </div>
+
+        <h3>Листовые — выполняют работу</h3>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Action (действие)</h3>
+                <p>Выполняет конкретное действие: вращать мотор, отправить сообщение, обновить переменную.</p>
+                <p style="font-size:.85em;color:var(--text2)">Возвращает SUCCESS по завершении, RUNNING пока работает, FAILURE при ошибке.</p>
+            </div>
+            <div class="card">
+                <h3>Condition (проверка)</h3>
+                <p>Проверяет условие: батарея > 20%? Цель видна? Путь свободен?</p>
+                <p style="font-size:.85em;color:var(--text2)">Мгновенная: SUCCESS если истина, FAILURE если ложь. Никогда не RUNNING.</p>
+            </div>
+        </div>
+
+        <h3>Декораторы — модифицируют поведение ребёнка</h3>
+
+        <table>
+            <tr><th>Декоратор</th><th>Что делает</th></tr>
+            <tr><td><code>Inverter</code></td><td>Инвертирует результат: SUCCESS ↔ FAILURE</td></tr>
+            <tr><td><code>Repeat(N)</code></td><td>Повторяет ребёнка N раз</td></tr>
+            <tr><td><code>RetryUntilSucceed</code></td><td>Повторяет, пока не SUCCESS</td></tr>
+            <tr><td><code>Timeout(T)</code></td><td>FAILURE если ребёнок не завершился за T секунд</td></tr>
+            <tr><td><code>ForceSuccess</code></td><td>Всегда возвращает SUCCESS (игнорирует FAILURE)</td></tr>
+        </table>
+
+        <!-- ============ ПРИМЕР ============ -->
+        <h2>Пример: робот-уборщик</h2>
+
+        <div class="schema">
+            <div style="text-align:left;max-width:600px;margin:0 auto;font-family:monospace;font-size:.9em;line-height:2">
+                <span style="color:var(--accent)">? Root (Fallback)</span><br>
+                <span style="color:var(--text2)">&nbsp;&nbsp;├─</span> <span style="color:var(--accent)">→ Убрать комнату (Sequence)</span><br>
+                <span style="color:var(--text2)">&nbsp;&nbsp;│&nbsp;&nbsp;├─</span> <span style="color:var(--green)">🔍 Комната грязная?</span><br>
+                <span style="color:var(--text2)">&nbsp;&nbsp;│&nbsp;&nbsp;├─</span> <span style="color:var(--accent)">? Найти мусор (Fallback)</span><br>
+                <span style="color:var(--text2)">&nbsp;&nbsp;│&nbsp;&nbsp;│&nbsp;&nbsp;├─</span> <span style="color:var(--green)">🔍 Мусор в поле зрения?</span><br>
+                <span style="color:var(--text2)">&nbsp;&nbsp;│&nbsp;&nbsp;│&nbsp;&nbsp;└─</span> <span style="color:var(--orange)">🎬 Исследовать комнату</span><br>
+                <span style="color:var(--text2)">&nbsp;&nbsp;│&nbsp;&nbsp;├─</span> <span style="color:var(--orange)">🎬 Подъехать к мусору</span><br>
+                <span style="color:var(--text2)">&nbsp;&nbsp;│&nbsp;&nbsp;└─</span> <span style="color:var(--orange)">🎬 Подобрать мусор</span><br>
+                <span style="color:var(--text2)">&nbsp;&nbsp;└─</span> <span style="color:var(--accent)">→ Зарядиться (Sequence)</span><br>
+                <span style="color:var(--text2)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─</span> <span style="color:var(--green)">🔍 Батарея &lt; 20%?</span><br>
+                <span style="color:var(--text2)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─</span> <span style="color:var(--orange)">🎬 Ехать к зарядке</span><br>
+                <span style="color:var(--text2)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span style="color:var(--orange)">🎬 Заряжаться</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <p><strong>Как это работает на каждом tick:</strong></p>
+            <ol>
+                <li>Root (Fallback) пробует первого ребёнка — «Убрать комнату»</li>
+                <li>Sequence проверяет: комната грязная? Если да — ищет мусор, едет, подбирает</li>
+                <li>Если «Убрать комнату» вернул FAILURE (комната чистая) — Fallback пробует «Зарядиться»</li>
+                <li>Sequence проверяет: батарея < 20%? Если да — едет заряжаться</li>
+                <li>Если оба ребёнка FAILURE — робот просто ждёт (следующий tick попробует снова)</li>
+            </ol>
+        </div>
+
+        <div class="card highlight">
+            <p><strong>Модульность:</strong> чтобы добавить «протирать пыль», достаточно добавить ещё один ребёнок в Root Fallback. Никакие существующие переходы не меняются — в отличие от FSM.</p>
+        </div>
+
+        <!-- ============ BT vs FSM ============ -->
+        <h2>BT vs FSM</h2>
+
+        <table>
+            <tr><th></th><th>FSM</th><th>Behaviour Tree</th></tr>
+            <tr><td><strong>Структура</strong></td><td>Граф (состояния + стрелки)</td><td>Дерево (узлы + ветвление)</td></tr>
+            <tr><td><strong>Добавление поведения</strong></td><td>Добавить переходы из каждого состояния</td><td>Добавить поддерево</td></tr>
+            <tr><td><strong>Реактивность</strong></td><td>Реагирует на события</td><td>Перепроверяет условия каждый tick</td></tr>
+            <tr><td><strong>Модульность</strong></td><td>Низкая (состояния связаны)</td><td>Высокая (поддеревья независимы)</td></tr>
+            <tr><td><strong>Формальный анализ</strong></td><td>Хорошо развит</td><td>Развивается (safety, liveness через FTS)</td></tr>
+            <tr><td><strong>Сложность восприятия</strong></td><td>Легко при ≤10 состояниях</td><td>Легко при любом размере (иерархия)</td></tr>
+        </table>
+
+        <!-- ============ ФОРМАЛЬНАЯ СЕМАНТИКА ============ -->
+        <h2>Формальная семантика</h2>
+
+        <div class="card">
+            <p>BT можно формализовать как <strong>Functional Transition System (FTS)</strong>:</p>
+            <p style="text-align:center;font-size:1.05em;margin:12px 0">$$BT = (\mathcal{T}, r, f_\Delta)$$</p>
+            <ul>
+                <li>$\mathcal{T}$ — множество поддеревьев</li>
+                <li>$r$ — корневой узел</li>
+                <li>$f_\Delta: \mathcal{T} \times \mathbb{R} \rightarrow \{S, F, R\}$ — функция обхода, возвращающая статус для каждого поддерева в зависимости от состояния мира</li>
+            </ul>
+            <p style="font-size:.85em;color:var(--text2)">Это позволяет доказывать свойства безопасности и живости для BT, хотя формальная верификация BT — активная область исследований.</p>
+        </div>
+
+        <!-- ============ ИНСТРУМЕНТЫ ============ -->
+        <h2>Инструменты</h2>
+
+        <div class="grid">
+            <div class="card">
+                <h3>BehaviorTree.CPP</h3>
+                <p style="font-size:.9em;color:var(--text2)">C++ библиотека, стандарт де-факто в ROS2. Используется в Nav2. XML-описание деревьев.</p>
+            </div>
+            <div class="card">
+                <h3>Groot</h3>
+                <p style="font-size:.9em;color:var(--text2)">Визуальный редактор для BehaviorTree.CPP. Drag-and-drop, мониторинг в реальном времени.</p>
+            </div>
+            <div class="card">
+                <h3>py_trees</h3>
+                <p style="font-size:.9em;color:var(--text2)">Python-библиотека. Используется с ROS1/ROS2 через py_trees_ros.</p>
+            </div>
+            <div class="card">
+                <h3>Unreal Engine BT</h3>
+                <p style="font-size:.9em;color:var(--text2)">Встроенный BT-редактор в UE. Стандарт для AI персонажей в AAA-играх.</p>
+            </div>
+        </div>
+
+        <!-- ============ ДАЛЬШЕ ============ -->
+        <h2>Дальше</h2>
+
+        <div class="card success">
+            <p>BT — мощный инструмент для робототехники и игр, но в промышленной автоматике используют другой формализм. Переходим к <a href="7-grafcet.html" style="color:var(--green);font-weight:600">GRAFCET / SFC</a> — стандарту программирования ПЛК.</p>
+        </div>
+    </div>
+</body>
+</html>
